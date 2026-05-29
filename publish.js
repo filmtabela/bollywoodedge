@@ -8,19 +8,21 @@ const { execSync } = require("child_process");
 // ============================================================
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 const SITE_DIR = process.cwd();
+const ASSOCIATE_TAG = "bollywoodedge-20";
+const AMAZON_BASE = "https://www.amazon.com";
 // ============================================================
 
 const client = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
 
 const TOPICS = [
-  { title: "Katrina Kaif Skincare Routine", category: "Skincare", tags: ["Katrina Kaif", "Skincare", "Glow"], emoji: "✨", amazonQuery: "vitamin+c+serum+skincare+india" },
-  { title: "Ranveer Singh Street Style Guide", category: "Men's Style", tags: ["Ranveer Singh", "Street Style", "Men"], emoji: "👑", amazonQuery: "men+streetwear+jacket+india" },
-  { title: "Priyanka Chopra Jewellery Picks", category: "Accessories", tags: ["Priyanka Chopra", "Jewellery", "Accessories"], emoji: "💍", amazonQuery: "statement+jewellery+women+india" },
-  { title: "Bollywood Wedding Guest Outfit Guide", category: "Ethnic Wear", tags: ["Wedding", "Ethnic Wear", "Lehenga"], emoji: "🪷", amazonQuery: "wedding+guest+lehenga+india" },
-  { title: "Sara Ali Khan Beauty Essentials", category: "Beauty", tags: ["Sara Ali Khan", "Beauty", "Makeup"], emoji: "💄", amazonQuery: "makeup+kit+india+bestseller" },
-  { title: "Bollywood Mens Fragrance Guide", category: "Fragrance", tags: ["Men", "Fragrance", "Cologne"], emoji: "🌸", amazonQuery: "men+perfume+india+bestseller" },
-  { title: "Alia Bhatt Casual Looks on Amazon", category: "Fashion", tags: ["Alia Bhatt", "Casual", "Fashion"], emoji: "👗", amazonQuery: "casual+kurta+set+women+india" },
-  { title: "Deepika Padukone Gym Wear Picks", category: "Fitness", tags: ["Deepika Padukone", "Gym", "Fitness"], emoji: "💪", amazonQuery: "women+gym+wear+india" },
+  { title: "Katrina Kaif Skincare Routine", category: "Skincare", tags: ["Katrina Kaif", "Skincare", "Glow"], emoji: "✨", amazonQuery: "vitamin+c+serum+skincare" },
+  { title: "Ranveer Singh Street Style Guide", category: "Men's Style", tags: ["Ranveer Singh", "Street Style", "Men"], emoji: "👑", amazonQuery: "men+streetwear+jacket" },
+  { title: "Priyanka Chopra Jewellery Picks", category: "Accessories", tags: ["Priyanka Chopra", "Jewellery", "Accessories"], emoji: "💍", amazonQuery: "statement+jewellery+women" },
+  { title: "Bollywood Wedding Guest Outfit Guide", category: "Ethnic Wear", tags: ["Wedding", "Ethnic Wear", "Lehenga"], emoji: "🪷", amazonQuery: "wedding+guest+lehenga" },
+  { title: "Sara Ali Khan Beauty Essentials", category: "Beauty", tags: ["Sara Ali Khan", "Beauty", "Makeup"], emoji: "💄", amazonQuery: "makeup+kit+bestseller" },
+  { title: "Bollywood Mens Fragrance Guide", category: "Fragrance", tags: ["Men", "Fragrance", "Cologne"], emoji: "🌸", amazonQuery: "men+perfume+bestseller" },
+  { title: "Alia Bhatt Casual Looks on Amazon", category: "Fashion", tags: ["Alia Bhatt", "Casual", "Fashion"], emoji: "👗", amazonQuery: "casual+kurta+set+women" },
+  { title: "Deepika Padukone Gym Wear Picks", category: "Fitness", tags: ["Deepika Padukone", "Gym", "Fitness"], emoji: "💪", amazonQuery: "women+gym+wear" },
 ];
 
 function getTodaysTopic() {
@@ -44,7 +46,7 @@ async function generateArticle(topic) {
 The article should:
 - Be 600-800 words
 - Have an engaging introduction mentioning the celebrity
-- Include 4-5 specific product recommendations with descriptions (these will link to Amazon India)
+- Include 4-5 specific product recommendations with descriptions (these will link to Amazon)
 - Have subheadings using H2 tags
 - Be written for Indian women aged 20-40 interested in Bollywood fashion
 - End with a call to action to shop on Amazon
@@ -71,7 +73,7 @@ function buildArticleHTML(topic, articleText) {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${topic.title} - BollywoodEdge</title>
-<meta name="description" content="${topic.title} - shop every piece on Amazon India. Bollywood style decoded.">
+<meta name="description" content="${topic.title} - shop every piece on Amazon. Bollywood style decoded.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -145,15 +147,15 @@ footer strong{color:#fff;}
   ${bodyHTML}
   <div class="shop-box">
     <h3>${topic.emoji} Shop ${topic.title.split(" ").slice(0,3).join(" ")} Picks on Amazon</h3>
-    <p>Find the best products handpicked to match this look - all available on Amazon India with fast delivery.</p>
-    <a href="https://www.amazon.in/s?k=${topic.amazonQuery}&tag=bollywoodedge-21" class="shop-btn" target="_blank" rel="nofollow">Shop on Amazon India</a>
+    <p>Find the best products handpicked to match this look - available on Amazon with fast delivery.</p>
+    <a href="${AMAZON_BASE}/s?k=${topic.amazonQuery}&tag=${ASSOCIATE_TAG}" class="shop-btn" target="_blank" rel="nofollow">Shop on Amazon</a>
   </div>
 </div>
 <footer>
   <p style="font-size:18px;font-family:'Playfair Display',serif;color:#fff;margin-bottom:8px;">BollywoodEdge</p>
   <p>Celebrity Style. Real Products. Every Day.</p>
   <p style="margin-top:12px;"><a href="/">Back to BollywoodEdge</a> - <a href="/articles.html">All Style Guides</a></p>
-  <p style="margin-top:16px;font-size:12px;">As an Amazon Associate, BollywoodEdge earns from qualifying purchases.<br>Associate ID: <strong>bollywoodedge-21</strong></p>
+  <p style="margin-top:16px;font-size:12px;">As an Amazon Associate, BollywoodEdge earns from qualifying purchases.<br>Associate ID: <strong>${ASSOCIATE_TAG}</strong></p>
   <p style="margin-top:12px;font-size:12px;">Copyright ${new Date().getFullYear()} BollywoodEdge</p>
 </footer>
 </body>
@@ -193,8 +195,8 @@ async function main() {
 
     console.log(`\n✅ Done!`);
     console.log(`📌 Article: ${topic.title}`);
-    console.log(`🔗 URL: https://imraankhan.in/articles/${slug}.html`);
-    console.log(`🛍  Tag: bollywoodedge-21`);
+    console.log(`🔗 URL: https://bollywoodedge.pages.dev/articles/${slug}.html`);
+    console.log(`🛍  Tag: ${ASSOCIATE_TAG}`);
 
   } catch (error) {
     console.error("❌ Error:", error.message);
