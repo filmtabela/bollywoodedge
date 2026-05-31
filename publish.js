@@ -827,7 +827,7 @@ async function main() {
     console.log(`✅ Articles index updated: ${allArticles.length} articles listed`);
 
     const homepageHTML = buildHomepageHTML(allArticles);
-    const homepagePath = path.join(SITE_DIR, "index.html.html");
+    const homepagePath = path.join(SITE_DIR, "index.html");
     fs.writeFileSync(homepagePath, homepageHTML);
     console.log(`✅ Homepage updated with ${allArticles.length} articles`);
 
