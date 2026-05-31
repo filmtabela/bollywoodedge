@@ -57,13 +57,18 @@ function getArticleMetadata(articlesDir, slugs) {
   return slugs.map(slug => {
     const filePath = path.join(articlesDir, `${slug}.html`);
     const content = fs.readFileSync(filePath, "utf8");
-    const titleMatch = content.match(/<title>(.*?) - BollywoodEdge<\/title>/);
-    const emojiCatMatch = content.match(/class="cat-label">([^<]+)<\/div>/);
-    const title = titleMatch ? titleMatch[1] : slug;
-    const emojiCat = emojiCatMatch ? emojiCatMatch[1].trim() : "✨ Style";
-    // find matching topic for category
+
+    // Match title from <title> tag, strip suffix
+    const titleMatch = content.match(/<title>([^<]+)<\/title>/);
+    const rawTitle = titleMatch ? titleMatch[1] : slug;
+    const title = rawTitle.replace(/\s*-\s*BollywoodEdge\s*$/, "").trim();
+
+    // Always prefer TOPICS as source of truth for category/emoji
     const matchedTopic = TOPICS.find(t => slugify(t.title) === slug);
     const category = matchedTopic ? matchedTopic.category : "Fashion";
+    const emoji = matchedTopic ? matchedTopic.emoji : "✨";
+    const emojiCat = `${emoji} ${category}`;
+
     return { slug, title, emojiCat, category };
   }).reverse();
 }
