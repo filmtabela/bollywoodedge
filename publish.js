@@ -15,7 +15,6 @@ const AMAZON_BASE = "https://www.amazon.com";
 const client = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
 
 const TOPICS = [
-  { title: "SRK Style Guide", category: "Men's Style", tags: ["Shah Rukh Khan", "Men's Style", "Pathaan", "Casual"], emoji: "👑", amazonQuery: "men+formal+wear+india" },
   { title: "Katrina Kaif Skincare Routine", category: "Skincare", tags: ["Katrina Kaif", "Skincare", "Glow"], emoji: "✨", amazonQuery: "vitamin+c+serum+skincare" },
   { title: "Ranveer Singh Street Style Guide", category: "Men's Style", tags: ["Ranveer Singh", "Street Style", "Men"], emoji: "👑", amazonQuery: "men+streetwear+jacket" },
   { title: "Priyanka Chopra Jewellery Picks", category: "Accessories", tags: ["Priyanka Chopra", "Jewellery", "Accessories"], emoji: "💍", amazonQuery: "statement+jewellery+women" },
@@ -30,7 +29,8 @@ const TOPICS = [
   { title: "Janhvi Kapoor Summer Style Guide", category: "Summer Fashion", tags: ["Janhvi Kapoor", "Summer", "Style"], emoji: "☀️", amazonQuery: "summer+dress+women" },
   { title: "Anushka Sharma Athleisure Guide", category: "Fitness", tags: ["Anushka Sharma", "Athleisure", "Style"], emoji: "🧘", amazonQuery: "women+athleisure+wear" },
   { title: "Vidya Balan Saree Style Decoded", category: "Ethnic Wear", tags: ["Vidya Balan", "Saree", "Traditional"], emoji: "🪷", amazonQuery: "cotton+silk+saree" },
-  { title: "Ranbir Kapoor Casual Style Guide", category: "Men's Style", tags: ["Ranbir Kapoor", "Casual", "Men"], emoji: "🎬", amazonQuery: "men+casual+shirt+india" },  { title: "Taapsee Pannu Minimalist Style", category: "Fashion", tags: ["Taapsee Pannu", "Minimalist", "Casual"], emoji: "🤍", amazonQuery: "minimalist+women+fashion" },
+  { title: "Tiger Shroff Streetwear Guide", category: "Men's Style", tags: ["Tiger Shroff", "Streetwear", "Men"], emoji: "👟", amazonQuery: "men+joggers+streetwear" },
+  { title: "Taapsee Pannu Minimalist Style", category: "Fashion", tags: ["Taapsee Pannu", "Minimalist", "Casual"], emoji: "🤍", amazonQuery: "minimalist+women+fashion" },
 ];
 
 function slugify(title) {
@@ -484,6 +484,310 @@ footer strong{color:#fff;}
 </html>`;
 }
 
+function buildHomepageHTML(articles) {
+  const tickerItems = articles.slice(0, 6).map(a =>
+    `<span>${a.emojiCat.split(" ")[0]} <b>${a.title}</b> — shop now</span>`
+  ).join("");
+
+  const featuredArticle = articles[0];
+  const featuredVisual = featuredArticle ? getCategoryVisual(featuredArticle.category) : "";
+
+  const gridCards = articles.slice(1, 7).map(a => {
+    const visual = getCategoryVisual(a.category);
+    return `
+    <a href="/articles/${a.slug}.html" style="text-decoration:none;">
+      <div class="article-card">
+        <div class="article-card-img" style="padding:0;overflow:hidden;">
+          ${visual.replace('width="200" height="150"', 'width="100%" height="160"')}
+        </div>
+        <div class="article-card-body">
+          <div class="ac-cat">${a.emojiCat}</div>
+          <div class="ac-title">${a.title}</div>
+          <span class="ac-link">Read more →</span>
+        </div>
+      </div>
+    </a>`;
+  }).join("\n");
+
+  const featuredVisualResized = featuredVisual.replace('width="200" height="150"', 'width="100%" height="100%"');
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BollywoodEdge – Bollywood Fashion, Beauty & Style</title>
+<meta name="description" content="Shop Bollywood-inspired fashion, beauty, and accessories. Celebrity style picks, trending looks, and curated product recommendations from India's favourite film world.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--pink:#E91E8C;--hot:#FF0066;--coral:#FF6B9D;--light:#FFF0F7;--dark:#1A0010;--text:#2D0020;--muted:#8B4570;--white:#FFFFFF;--gold:#FFB800;}
+body{font-family:'DM Sans',sans-serif;background:#FFF5FA;color:var(--text);overflow-x:hidden;}
+.ticker-wrap{background:var(--dark);color:var(--white);padding:10px 0;overflow:hidden;white-space:nowrap;}
+.ticker-inner{display:inline-block;animation:ticker 30s linear infinite;}
+.ticker-inner span{margin:0 40px;font-size:13px;letter-spacing:.5px;}
+.ticker-inner span b{color:var(--coral);}
+@keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+header{background:var(--white);border-bottom:3px solid var(--pink);position:sticky;top:0;z-index:100;}
+.header-inner{max-width:1200px;margin:0 auto;padding:0 16px;display:flex;align-items:center;justify-content:space-between;height:64px;}
+.logo{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--pink);text-decoration:none;letter-spacing:-0.5px;}
+.logo span{color:var(--dark);}
+.tagline{font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;display:block;margin-top:-4px;}
+.header-nav{display:flex;align-items:center;gap:16px;}
+.header-nav a{color:var(--muted);font-size:13px;font-weight:600;text-decoration:none;letter-spacing:.3px;}
+.header-nav a:hover{color:var(--pink);}
+.header-badge{background:var(--pink);color:#fff;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;letter-spacing:.5px;text-decoration:none;}
+.hero{background:linear-gradient(135deg,#1A0010 0%,#3D0030 50%,#6B0050 100%);color:#fff;padding:48px 16px;text-align:center;position:relative;overflow:hidden;}
+.hero::before{content:'★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★';position:absolute;top:10px;left:0;right:0;font-size:12px;color:rgba(255,255,255,0.08);letter-spacing:8px;}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(28px,6vw,52px);font-weight:700;line-height:1.1;margin-bottom:12px;}
+.hero h1 em{color:var(--coral);font-style:italic;}
+.hero p{font-size:16px;color:rgba(255,255,255,0.75);max-width:500px;margin:0 auto 24px;}
+.hero-cta{display:inline-block;background:var(--hot);color:#fff;font-weight:600;font-size:14px;padding:12px 28px;border-radius:30px;text-decoration:none;letter-spacing:.5px;}
+.disclosure{background:#FFF0F7;border-left:4px solid var(--pink);padding:10px 16px;font-size:12px;color:var(--muted);text-align:center;}
+.cats{background:var(--white);border-bottom:1px solid #F0D0E8;padding:12px 16px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.cats-inner{display:flex;gap:8px;max-width:1200px;margin:0 auto;min-width:max-content;}
+.cat-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:24px;border:1.5px solid var(--pink);background:var(--white);color:var(--pink);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;text-decoration:none;transition:all .2s;}
+.cat-btn:hover,.cat-btn.active{background:var(--pink);color:#fff;}
+.articles-section{max-width:1200px;margin:0 auto;padding:48px 16px 32px;}
+.articles-section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;padding-bottom:14px;border-bottom:2px solid var(--light);}
+.articles-section-title{font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--dark);}
+.articles-count{background:var(--pink);color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:12px;}
+.articles-view-all{color:var(--pink);font-size:14px;font-weight:700;text-decoration:none;border:1.5px solid var(--pink);padding:6px 16px;border-radius:20px;}
+.articles-view-all:hover{background:var(--pink);color:#fff;}
+.hero-article{display:grid;grid-template-columns:1fr 1fr;gap:0;background:var(--white);border-radius:20px;overflow:hidden;border:1px solid #F0D0E8;margin-bottom:24px;transition:box-shadow .2s;text-decoration:none;}
+.hero-article:hover{box-shadow:0 16px 48px rgba(233,30,140,0.12);}
+.hero-article-img{min-height:280px;display:flex;flex-direction:column;justify-content:flex-end;padding:28px;position:relative;overflow:hidden;background:linear-gradient(135deg,#1A0010,#6B0050);}
+.hero-article-visual{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;opacity:0.7;}
+.hero-article-visual svg{width:100%;height:100%;object-fit:cover;}
+.hero-article-content{position:relative;z-index:1;}
+.hero-article-img .art-label{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--coral);font-weight:600;margin-bottom:10px;}
+.hero-article-img h2{font-family:'Playfair Display',serif;font-size:clamp(18px,2.5vw,26px);font-weight:700;color:#fff;line-height:1.2;margin-bottom:12px;}
+.hero-article-img .art-meta{font-size:12px;color:rgba(255,255,255,0.55);}
+.hero-article-body{padding:28px;display:flex;flex-direction:column;justify-content:center;background:var(--white);}
+.hero-article-body .art-excerpt{font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:20px;}
+.art-read-btn{display:inline-block;background:var(--pink);color:#fff;font-weight:600;font-size:13px;padding:10px 22px;border-radius:24px;text-decoration:none;align-self:flex-start;}
+.art-read-btn:hover{background:var(--hot);}
+.article-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-bottom:24px;}
+.article-card{background:var(--white);border-radius:16px;overflow:hidden;border:1px solid #F0D0E8;transition:transform .2s,box-shadow .2s;display:flex;flex-direction:column;}
+.article-card:hover{transform:translateY(-4px);box-shadow:0 12px 32px rgba(233,30,140,0.12);}
+.article-card-img{height:160px;overflow:hidden;}
+.article-card-img svg{width:100%;height:100%;}
+.article-card-body{padding:16px;flex:1;display:flex;flex-direction:column;}
+.ac-cat{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--coral);font-weight:600;margin-bottom:6px;}
+.ac-title{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:var(--dark);margin-bottom:10px;line-height:1.4;flex:1;}
+.ac-link{color:var(--pink);font-size:13px;font-weight:600;text-decoration:none;}
+.view-all-banner{background:linear-gradient(135deg,#E91E8C,#FF6B9D);border-radius:16px;padding:24px;text-align:center;color:#fff;margin-top:8px;}
+.view-all-banner h3{font-family:'Playfair Display',serif;font-size:20px;margin-bottom:8px;}
+.view-all-banner p{font-size:13px;opacity:0.9;margin-bottom:16px;}
+.view-all-btn{display:inline-block;background:#fff;color:var(--pink);font-weight:700;font-size:14px;padding:10px 28px;border-radius:24px;text-decoration:none;}
+.section{max-width:1200px;margin:0 auto;padding:40px 16px;}
+.section-header{display:flex;align-items:center;gap:12px;margin-bottom:24px;padding-bottom:12px;border-bottom:2px solid var(--light);}
+.section-title{font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--dark);}
+.section-badge{background:var(--pink);color:#fff;font-size:11px;font-weight:600;padding:3px 10px;border-radius:12px;letter-spacing:.5px;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;}
+.card{background:var(--white);border-radius:16px;overflow:hidden;border:1px solid #F0D0E8;transition:transform .2s,box-shadow .2s;display:flex;flex-direction:column;}
+.card:hover{transform:translateY(-4px);box-shadow:0 12px 32px rgba(233,30,140,0.15);}
+.card-img{width:100%;height:180px;object-fit:cover;background:#FFF0F7;display:flex;align-items:center;justify-content:center;font-size:48px;}
+.card-body{padding:14px;flex:1;display:flex;flex-direction:column;}
+.card-cat{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--coral);font-weight:600;margin-bottom:4px;}
+.card-title{font-size:14px;font-weight:600;color:var(--dark);margin-bottom:6px;line-height:1.4;}
+.card-desc{font-size:12px;color:var(--muted);line-height:1.5;flex:1;margin-bottom:12px;}
+.card-price{font-size:13px;font-weight:600;color:var(--pink);margin-bottom:10px;}
+.card-btn{display:block;background:var(--pink);color:#fff;text-align:center;padding:9px;border-radius:10px;font-size:13px;font-weight:600;text-decoration:none;}
+.card-btn:hover{background:var(--hot);}
+footer{background:var(--dark);color:rgba(255,255,255,0.6);text-align:center;padding:32px 16px;font-size:13px;line-height:1.8;}
+footer a{color:var(--coral);text-decoration:none;}
+footer strong{color:#fff;}
+[id]{scroll-margin-top:80px;}
+@media(max-width:700px){
+  .hero-article{grid-template-columns:1fr;}
+  .hero-article-img{min-height:200px;}
+  .hero h1{font-size:28px;}
+  .grid{grid-template-columns:repeat(2,1fr);}
+  .article-cards{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<div class="ticker-wrap">
+  <div class="ticker-inner">
+    ${tickerItems}${tickerItems}
+  </div>
+</div>
+<header>
+  <div class="header-inner">
+    <a href="/" class="logo">Bollywood<span>Edge</span>
+      <span class="tagline">Celebrity Style. Real Products.</span>
+    </a>
+    <div class="header-nav">
+      <a href="/articles.html">✍ Style Guides</a>
+      <a href="#fashion" class="header-badge">🛍 Shop Now</a>
+    </div>
+  </div>
+</header>
+<div class="hero">
+  <h1>Dress Like Your<br><em>Favourite Star</em></h1>
+  <p>Bollywood-inspired fashion, beauty & accessories — all on Amazon</p>
+  <a href="#articles" class="hero-cta">Read Style Guides ↓</a>
+</div>
+<div class="disclosure">
+  📢 As an Amazon Associate, BollywoodEdge earns from qualifying purchases. Prices subject to change.
+</div>
+<div class="cats">
+  <div class="cats-inner">
+    <a href="#articles" class="cat-btn">📖 Style Guides</a>
+    <a href="#fashion" class="cat-btn">👗 Fashion</a>
+    <a href="#beauty" class="cat-btn">💄 Beauty</a>
+    <a href="#accessories" class="cat-btn">💍 Accessories</a>
+    <a href="#skincare" class="cat-btn">✨ Skincare</a>
+    <a href="#fragrance" class="cat-btn">🌸 Fragrance</a>
+    <a href="#ethnic" class="cat-btn">🪷 Ethnic Wear</a>
+    <a href="#fitness" class="cat-btn">💪 Fitness</a>
+    <a href="#gifts" class="cat-btn">🎁 Gifts</a>
+  </div>
+</div>
+
+<div id="articles" class="articles-section">
+  <div class="articles-section-header">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <h2 class="articles-section-title">📖 Style Guides & Celebrity Looks</h2>
+      <span class="articles-count">${articles.length} GUIDES</span>
+    </div>
+    <a href="/articles.html" class="articles-view-all">View all guides →</a>
+  </div>
+
+  ${featuredArticle ? `
+  <a href="/articles/${featuredArticle.slug}.html" class="hero-article">
+    <div class="hero-article-img">
+      <div class="hero-article-visual">${featuredVisualResized}</div>
+      <div class="hero-article-content">
+        <div class="art-label">${featuredArticle.emojiCat} · LATEST</div>
+        <h2>${featuredArticle.title}</h2>
+        <div class="art-meta">Style Guide · Amazon picks inside</div>
+      </div>
+    </div>
+    <div class="hero-article-body">
+      <p class="art-excerpt">Bollywood style decoded — every look broken down with real products you can shop right now on Amazon India.</p>
+      <span class="art-read-btn">Read the Guide →</span>
+    </div>
+  </a>` : ""}
+
+  <div class="article-cards">
+    ${gridCards}
+  </div>
+
+  <div class="view-all-banner">
+    <h3>✨ ${articles.length} Style Guides & Growing</h3>
+    <p>New celebrity style guide published every day — all with Amazon picks inside.</p>
+    <a href="/articles.html" class="view-all-btn">View All Style Guides →</a>
+  </div>
+</div>
+
+<div id="fashion" class="section">
+  <div class="section-header">
+    <h2 class="section-title">👗 Fashion</h2>
+    <span class="section-badge">TRENDING</span>
+  </div>
+  <div class="grid">
+    <div class="card"><div class="card-img">👗</div><div class="card-body"><div class="card-cat">Celebrity Style</div><div class="card-title">Bollywood-Inspired Anarkali Suit</div><div class="card-desc">Elegant floral embroidery — as seen on your favourite stars at film premieres</div><div class="card-price">From ₹1,299</div><a href="https://www.amazon.in/s?k=anarkali+suit+women&tag=bollywoodedge-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">👘</div><div class="card-body"><div class="card-cat">Alia Bhatt Inspired</div><div class="card-title">Printed Kurta Set</div><div class="card-desc">Contemporary Indian casual — perfect for brunch, events and everyday elegance</div><div class="card-price">From ₹899</div><a href="https://www.amazon.in/s?k=printed+kurta+set+women&tag=bollywoodedge-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">🥻</div><div class="card-body"><div class="card-cat">Red Carpet Look</div><div class="card-title">Designer Saree Collection</div><div class="card-desc">Georgette, silk and chiffon sarees inspired by Bollywood award nights</div><div class="card-price">From ₹1,999</div><a href="https://www.amazon.in/s?k=designer+saree+women&tag=bollywoodedge-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
+  </div>
+</div>
+
+<div id="beauty" class="section" style="background:var(--light);border-radius:24px;margin:0 16px;padding:40px 24px;max-width:none;">
+  <div style="max-width:1200px;margin:0 auto;">
+  <div class="section-header"><h2 class="section-title">💄 Beauty</h2><span class="section-badge">BESTSELLERS</span></div>
+  <div class="grid">
+    <div class="card"><div class="card-img">💄</div><div class="card-body"><div class="card-cat">Katrina Kaif Picks</div><div class="card-title">Long-Wear Liquid Lipstick Set</div><div class="card-desc">Smudge-proof, transfer-resistant formula in 12 Bollywood-favourite shades</div><div class="card-price">From ₹499</div><a href="https://www.amazon.in/s?k=long+wear+liquid+lipstick+set&tag=bollywoodedge-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">👁️</div><div class="card-body"><div class="card-cat">Glam Makeup</div><div class="card-title">Smoky Eye Palette</div><div class="card-desc">12 richly pigmented shades for the classic Bollywood smoky eye look</div><div class="card-price">From ₹699</div><a href="https://www.amazon.in/s?k=smoky+eye+palette&tag=bollywoodedge-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">✨</div><div class="card-body"><div class="card-cat">Glow Essentials</div><div class="card-title">Highlighter & Blush Duo</div><div class="card-desc">Achieve the dewy Bollywood glow — perfect for photography and events</div><div class="card-price">From ₹399</div><a href="https://www.amazon.in/s?k=highlighter+blush+makeup&tag=bollywoodedge-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
+  </div>
+  </div>
+</div>
+
+<div id="accessories" class="section">
+  <div class="section-header"><h2 class="section-title">💍 Accessories</h2><span class="section-badge">NEW IN</span></div>
+  <div class="grid">
+    <div class="card"><div class="card-img">💍</div><div class="card-body"><div class="card-cat">Priyanka Chopra Style</div><div class="card-title">Statement Oxidised Jewellery Set</div><div class="card-desc">Necklace, earrings and maang tikka — complete the ethnic look</div><div class="card-price">From ₹799</div><a href="https://www.amazon.in/s?k=oxidised+jewellery+set+ethnic&tag=bollywoodedge-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">👜</div><div class="card-body"><div class="card-cat">Street Style</div><div class="card-title">Embroidered Potli Bag</div><div class="card-desc">Bollywood wedding season essential — zari work, multiple colour options</div><div class="card-price">From ₹599</div><a href="https://www.amazon.in/s?k=embroidered+potli+bag&tag=bollywoodedge-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">🕶️</div><div class="card-body"><div class="card-cat">Star-Spotted</div><div class="card-title">Oversized Cat-Eye Sunglasses</div><div class="card-desc">Airport look approved — UV400 protection, seen on leading Bollywood actresses</div><div class="card-price">From ₹449</div><a href="https://www.amazon.in/s?k=cat+eye+sunglasses+women&tag=bollywoodedge-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
+  </div>
+</div>
+
+<div id="skincare" class="section" style="background:var(--light);border-radius:24px;margin:0 16px;padding:40px 24px;max-width:none;">
+  <div style="max-width:1200px;margin:0 auto;">
+  <div class="section-header"><h2 class="section-title">✨ Skincare</h2><span class="section-badge">DEEPIKA'S PICKS</span></div>
+  <div class="grid">
+    <div class="card"><div class="card-img">🌿</div><div class="card-body"><div class="card-cat">Glass Skin</div><div class="card-title">Vitamin C Brightening Serum</div><div class="card-desc">The glow secret behind Bollywood's flawless complexions — dermatologist-tested</div><div class="card-price">From ₹599</div><a href="https://www.amazon.in/s?k=vitamin+c+brightening+serum&tag=bollywoodedge-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">☀️</div><div class="card-body"><div class="card-cat">Daily Essential</div><div class="card-title">SPF 50 Tinted Sunscreen</div><div class="card-desc">Lightweight, non-greasy formula — all skin types, no white cast</div><div class="card-price">From ₹349</div><a href="https://www.amazon.in/s?k=spf+50+tinted+sunscreen+india&tag=bollywoodedge-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
+  </div>
+  </div>
+</div>
+
+<div id="fragrance" class="section">
+  <div class="section-header"><h2 class="section-title">🌸 Fragrance</h2><span class="section-badge">STAR SCENTS</span></div>
+  <div class="grid">
+    <div class="card"><div class="card-img">🌸</div><div class="card-body"><div class="card-cat">For Her</div><div class="card-title">Floral Oriental Eau de Parfum</div><div class="card-desc">Inspired by the signature scents of Bollywood's leading ladies — long-lasting, elegant</div><div class="card-price">From ₹899</div><a href="https://www.amazon.in/s?k=floral+oriental+perfume+women+india&tag=bollywoodedge-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">🫙</div><div class="card-body"><div class="card-cat">For Him</div><div class="card-title">Oud & Woody Cologne</div><div class="card-desc">Bold, masculine and distinctly desi — the scent of Bollywood's leading men</div><div class="card-price">From ₹799</div><a href="https://www.amazon.in/s?k=oud+woody+cologne+men+india&tag=bollywoodedge-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
+  </div>
+</div>
+
+<div id="ethnic" class="section" style="background:var(--light);border-radius:24px;margin:0 16px;padding:40px 24px;max-width:none;">
+  <div style="max-width:1200px;margin:0 auto;">
+  <div class="section-header"><h2 class="section-title">🪷 Ethnic Wear</h2><span class="section-badge">WEDDING SEASON</span></div>
+  <div class="grid">
+    <div class="card"><div class="card-img">🪷</div><div class="card-body"><div class="card-cat">Wedding Collection</div><div class="card-title">Banarasi Silk Lehenga</div><div class="card-desc">Bridal-quality weaves at accessible prices — available in 20+ colour combinations</div><div class="card-price">From ₹2,499</div><a href="https://www.amazon.in/s?k=banarasi+silk+lehenga&tag=bollywoodedge-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">🎋</div><div class="card-body"><div class="card-cat">Festive Ready</div><div class="card-title">Embroidered Salwar Kameez</div><div class="card-desc">Eid, Diwali and wedding season staple — mirror work, thread embroidery options</div><div class="card-price">From ₹1,199</div><a href="https://www.amazon.in/s?k=embroidered+salwar+kameez+festive&tag=bollywoodedge-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
+  </div>
+  </div>
+</div>
+
+<div id="fitness" class="section">
+  <div class="section-header"><h2 class="section-title">💪 Fitness</h2><span class="section-badge">STAR WORKOUT</span></div>
+  <div class="grid">
+    <div class="card"><div class="card-img">🏋️</div><div class="card-body"><div class="card-cat">Gym Wear</div><div class="card-title">High-Waist Yoga Leggings</div><div class="card-desc">As worn by Bollywood's fittest actresses — squat-proof, moisture-wicking fabric</div><div class="card-price">From ₹699</div><a href="https://www.amazon.in/s?k=high+waist+yoga+leggings+women&tag=bollywoodedge-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">🧘</div><div class="card-body"><div class="card-cat">Wellness</div><div class="card-title">Premium Yoga Mat</div><div class="card-desc">Non-slip, eco-friendly — the workout essential for Bollywood's wellness routines</div><div class="card-price">From ₹999</div><a href="https://www.amazon.in/s?k=premium+yoga+mat+non+slip&tag=bollywoodedge-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
+  </div>
+</div>
+
+<div id="gifts" class="section" style="background:var(--light);border-radius:24px;margin:0 16px 40px;padding:40px 24px;max-width:none;">
+  <div style="max-width:1200px;margin:0 auto;">
+  <div class="section-header"><h2 class="section-title">🎁 Gifts</h2><span class="section-badge">FOR EVERY OCCASION</span></div>
+  <div class="grid">
+    <div class="card"><div class="card-img">🎁</div><div class="card-body"><div class="card-cat">Gift Sets</div><div class="card-title">Luxury Beauty Gift Hamper</div><div class="card-desc">Curated skincare and makeup gifts — perfect for birthdays, anniversaries, Eid & Diwali</div><div class="card-price">From ₹1,499</div><a href="https://www.amazon.in/s?k=luxury+beauty+gift+hamper+india&tag=bollywoodedge-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">💝</div><div class="card-body"><div class="card-cat">For Her</div><div class="card-title">Bollywood-Style Jewellery Gift Box</div><div class="card-desc">Layered necklace, earrings and bracelet set — elegant packaging, ready to gift</div><div class="card-price">From ₹999</div><a href="https://www.amazon.in/s?k=jewellery+gift+set+women+india&tag=bollywoodedge-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
+  </div>
+  </div>
+</div>
+
+<footer>
+  <p style="font-size:18px;font-family:'Playfair Display',serif;color:#fff;margin-bottom:8px;">BollywoodEdge</p>
+  <p>Celebrity Style. Real Products. Every Day.</p>
+  <p style="margin-top:12px;"><a href="/articles.html">Style Guides</a> &nbsp;·&nbsp; <a href="#fashion">Shop</a></p>
+  <p style="margin-top:16px;font-size:12px;">As an Amazon Associate, BollywoodEdge earns from qualifying purchases made through links on this site.<br>Amazon and the Amazon logo are trademarks of Amazon.com, Inc. or its affiliates.<br><br>Associate IDs: <strong>bollywoodedge-21</strong> (Amazon.in) · <strong>bollywoodedge-20</strong> (Amazon.com)</p>
+  <p style="margin-top:12px;font-size:12px;">© ${new Date().getFullYear()} BollywoodEdge</p>
+</footer>
+<script>
+const catBtns = document.querySelectorAll('.cat-btn');
+const sections = document.querySelectorAll('[id]');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if(e.isIntersecting){
+      catBtns.forEach(b => {
+        b.classList.toggle('active', b.getAttribute('href') === '#' + e.target.id);
+      });
+    }
+  });
+}, {threshold:0.3});
+sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>`;
+}
+
 function gitPush(slug) {
   console.log("\n📤 Pushing to GitHub...");
   try {
@@ -521,6 +825,11 @@ async function main() {
     const indexPath = path.join(SITE_DIR, "articles.html");
     fs.writeFileSync(indexPath, indexHTML);
     console.log(`✅ Articles index updated: ${allArticles.length} articles listed`);
+
+    const homepageHTML = buildHomepageHTML(allArticles);
+    const homepagePath = path.join(SITE_DIR, "index.html.html");
+    fs.writeFileSync(homepagePath, homepageHTML);
+    console.log(`✅ Homepage updated with ${allArticles.length} articles`);
 
     gitPush(slug);
 
