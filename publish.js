@@ -15,6 +15,7 @@ const AMAZON_BASE = "https://www.amazon.com";
 const client = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
 
 const TOPICS = [
+  { title: "SRK Style Guide", category: "Men's Style", tags: ["Shah Rukh Khan", "Men's Style", "Pathaan", "Casual"], emoji: "👑", amazonQuery: "men+formal+wear+india" },
   { title: "Katrina Kaif Skincare Routine", category: "Skincare", tags: ["Katrina Kaif", "Skincare", "Glow"], emoji: "✨", amazonQuery: "vitamin+c+serum+skincare" },
   { title: "Ranveer Singh Street Style Guide", category: "Men's Style", tags: ["Ranveer Singh", "Street Style", "Men"], emoji: "👑", amazonQuery: "men+streetwear+jacket" },
   { title: "Priyanka Chopra Jewellery Picks", category: "Accessories", tags: ["Priyanka Chopra", "Jewellery", "Accessories"], emoji: "💍", amazonQuery: "statement+jewellery+women" },
