@@ -469,7 +469,7 @@ footer strong{color:#fff;}
     <div class="shop-sidebar">
       <h3>Shop Bollywood Style</h3>
       <p>Find every look on Amazon — fast delivery, real products.</p>
-      <a href="https://www.amazon.in/?tag=bollywoodedge-21" class="shop-btn" target="_blank" rel="nofollow">Shop Amazon →</a>
+      <a href="https://www.amazon.in/?tag=bollywooded0f-21" class="shop-btn" target="_blank" rel="nofollow">Shop Amazon →</a>
     </div>
   </div>
 </div>
@@ -691,9 +691,9 @@ footer strong{color:#fff;}
     <span class="section-badge">TRENDING</span>
   </div>
   <div class="grid">
-    <div class="card"><div class="card-img">👗</div><div class="card-body"><div class="card-cat">Celebrity Style</div><div class="card-title">Bollywood-Inspired Anarkali Suit</div><div class="card-desc">Elegant floral embroidery — as seen on your favourite stars at film premieres</div><div class="card-price">From ₹1,299</div><a href="https://www.amazon.in/s?k=anarkali+suit+women&tag=bollywoodedge-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
-    <div class="card"><div class="card-img">👘</div><div class="card-body"><div class="card-cat">Alia Bhatt Inspired</div><div class="card-title">Printed Kurta Set</div><div class="card-desc">Contemporary Indian casual — perfect for brunch, events and everyday elegance</div><div class="card-price">From ₹899</div><a href="https://www.amazon.in/s?k=printed+kurta+set+women&tag=bollywoodedge-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
-    <div class="card"><div class="card-img">🥻</div><div class="card-body"><div class="card-cat">Red Carpet Look</div><div class="card-title">Designer Saree Collection</div><div class="card-desc">Georgette, silk and chiffon sarees inspired by Bollywood award nights</div><div class="card-price">From ₹1,999</div><a href="https://www.amazon.in/s?k=designer+saree+women&tag=bollywoodedge-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">👗</div><div class="card-body"><div class="card-cat">Celebrity Style</div><div class="card-title">Bollywood-Inspired Anarkali Suit</div><div class="card-desc">Elegant floral embroidery — as seen on your favourite stars at film premieres</div><div class="card-price">From ₹1,299</div><a href="https://www.amazon.in/s?k=anarkali+suit+women&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">👘</div><div class="card-body"><div class="card-cat">Alia Bhatt Inspired</div><div class="card-title">Printed Kurta Set</div><div class="card-desc">Contemporary Indian casual — perfect for brunch, events and everyday elegance</div><div class="card-price">From ₹899</div><a href="https://www.amazon.in/s?k=printed+kurta+set+women&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">🥻</div><div class="card-body"><div class="card-cat">Red Carpet Look</div><div class="card-title">Designer Saree Collection</div><div class="card-desc">Georgette, silk and chiffon sarees inspired by Bollywood award nights</div><div class="card-price">From ₹1,999</div><a href="https://www.amazon.in/s?k=designer+saree+women&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
   </div>
 </div>
 
@@ -701,9 +701,9 @@ footer strong{color:#fff;}
   <div style="max-width:1200px;margin:0 auto;">
   <div class="section-header"><h2 class="section-title">💄 Beauty</h2><span class="section-badge">BESTSELLERS</span></div>
   <div class="grid">
-    <div class="card"><div class="card-img">💄</div><div class="card-body"><div class="card-cat">Katrina Kaif Picks</div><div class="card-title">Long-Wear Liquid Lipstick Set</div><div class="card-desc">Smudge-proof, transfer-resistant formula in 12 Bollywood-favourite shades</div><div class="card-price">From ₹499</div><a href="https://www.amazon.in/s?k=long+wear+liquid+lipstick+set&tag=bollywoodedge-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
-    <div class="card"><div class="card-img">👁️</div><div class="card-body"><div class="card-cat">Glam Makeup</div><div class="card-title">Smoky Eye Palette</div><div class="card-desc">12 richly pigmented shades for the classic Bollywood smoky eye look</div><div class="card-price">From ₹699</div><a href="https://www.amazon.in/s?k=smoky+eye+palette&tag=bollywoodedge-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
-    <div class="card"><div class="card-img">✨</div><div class="card-body"><div class="card-cat">Glow Essentials</div><div class="card-title">Highlighter & Blush Duo</div><div class="card-desc">Achieve the dewy Bollywood glow — perfect for photography and events</div><div class="card-price">From ₹399</div><a href="https://www.amazon.in/s?k=highlighter+blush+makeup&tag=bollywoodedge-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">💄</div><div class="card-body"><div class="card-cat">Katrina Kaif Picks</div><div class="card-title">Long-Wear Liquid Lipstick Set</div><div class="card-desc">Smudge-proof, transfer-resistant formula in 12 Bollywood-favourite shades</div><div class="card-price">From ₹499</div><a href="https://www.amazon.in/s?k=long+wear+liquid+lipstick+set&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">👁️</div><div class="card-body"><div class="card-cat">Glam Makeup</div><div class="card-title">Smoky Eye Palette</div><div class="card-desc">12 richly pigmented shades for the classic Bollywood smoky eye look</div><div class="card-price">From ₹699</div><a href="https://www.amazon.in/s?k=smoky+eye+palette&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">✨</div><div class="card-body"><div class="card-cat">Glow Essentials</div><div class="card-title">Highlighter & Blush Duo</div><div class="card-desc">Achieve the dewy Bollywood glow — perfect for photography and events</div><div class="card-price">From ₹399</div><a href="https://www.amazon.in/s?k=highlighter+blush+makeup&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
   </div>
   </div>
 </div>
@@ -711,9 +711,9 @@ footer strong{color:#fff;}
 <div id="accessories" class="section">
   <div class="section-header"><h2 class="section-title">💍 Accessories</h2><span class="section-badge">NEW IN</span></div>
   <div class="grid">
-    <div class="card"><div class="card-img">💍</div><div class="card-body"><div class="card-cat">Priyanka Chopra Style</div><div class="card-title">Statement Oxidised Jewellery Set</div><div class="card-desc">Necklace, earrings and maang tikka — complete the ethnic look</div><div class="card-price">From ₹799</div><a href="https://www.amazon.in/s?k=oxidised+jewellery+set+ethnic&tag=bollywoodedge-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
-    <div class="card"><div class="card-img">👜</div><div class="card-body"><div class="card-cat">Street Style</div><div class="card-title">Embroidered Potli Bag</div><div class="card-desc">Bollywood wedding season essential — zari work, multiple colour options</div><div class="card-price">From ₹599</div><a href="https://www.amazon.in/s?k=embroidered+potli+bag&tag=bollywoodedge-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
-    <div class="card"><div class="card-img">🕶️</div><div class="card-body"><div class="card-cat">Star-Spotted</div><div class="card-title">Oversized Cat-Eye Sunglasses</div><div class="card-desc">Airport look approved — UV400 protection, seen on leading Bollywood actresses</div><div class="card-price">From ₹449</div><a href="https://www.amazon.in/s?k=cat+eye+sunglasses+women&tag=bollywoodedge-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">💍</div><div class="card-body"><div class="card-cat">Priyanka Chopra Style</div><div class="card-title">Statement Oxidised Jewellery Set</div><div class="card-desc">Necklace, earrings and maang tikka — complete the ethnic look</div><div class="card-price">From ₹799</div><a href="https://www.amazon.in/s?k=oxidised+jewellery+set+ethnic&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">👜</div><div class="card-body"><div class="card-cat">Street Style</div><div class="card-title">Embroidered Potli Bag</div><div class="card-desc">Bollywood wedding season essential — zari work, multiple colour options</div><div class="card-price">From ₹599</div><a href="https://www.amazon.in/s?k=embroidered+potli+bag&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">🕶️</div><div class="card-body"><div class="card-cat">Star-Spotted</div><div class="card-title">Oversized Cat-Eye Sunglasses</div><div class="card-desc">Airport look approved — UV400 protection, seen on leading Bollywood actresses</div><div class="card-price">From ₹449</div><a href="https://www.amazon.in/s?k=cat+eye+sunglasses+women&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
   </div>
 </div>
 
@@ -721,8 +721,8 @@ footer strong{color:#fff;}
   <div style="max-width:1200px;margin:0 auto;">
   <div class="section-header"><h2 class="section-title">✨ Skincare</h2><span class="section-badge">DEEPIKA'S PICKS</span></div>
   <div class="grid">
-    <div class="card"><div class="card-img">🌿</div><div class="card-body"><div class="card-cat">Glass Skin</div><div class="card-title">Vitamin C Brightening Serum</div><div class="card-desc">The glow secret behind Bollywood's flawless complexions — dermatologist-tested</div><div class="card-price">From ₹599</div><a href="https://www.amazon.in/s?k=vitamin+c+brightening+serum&tag=bollywoodedge-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
-    <div class="card"><div class="card-img">☀️</div><div class="card-body"><div class="card-cat">Daily Essential</div><div class="card-title">SPF 50 Tinted Sunscreen</div><div class="card-desc">Lightweight, non-greasy formula — all skin types, no white cast</div><div class="card-price">From ₹349</div><a href="https://www.amazon.in/s?k=spf+50+tinted+sunscreen+india&tag=bollywoodedge-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">🌿</div><div class="card-body"><div class="card-cat">Glass Skin</div><div class="card-title">Vitamin C Brightening Serum</div><div class="card-desc">The glow secret behind Bollywood's flawless complexions — dermatologist-tested</div><div class="card-price">From ₹599</div><a href="https://www.amazon.in/s?k=vitamin+c+brightening+serum&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">☀️</div><div class="card-body"><div class="card-cat">Daily Essential</div><div class="card-title">SPF 50 Tinted Sunscreen</div><div class="card-desc">Lightweight, non-greasy formula — all skin types, no white cast</div><div class="card-price">From ₹349</div><a href="https://www.amazon.in/s?k=spf+50+tinted+sunscreen+india&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
   </div>
   </div>
 </div>
@@ -730,8 +730,8 @@ footer strong{color:#fff;}
 <div id="fragrance" class="section">
   <div class="section-header"><h2 class="section-title">🌸 Fragrance</h2><span class="section-badge">STAR SCENTS</span></div>
   <div class="grid">
-    <div class="card"><div class="card-img">🌸</div><div class="card-body"><div class="card-cat">For Her</div><div class="card-title">Floral Oriental Eau de Parfum</div><div class="card-desc">Inspired by the signature scents of Bollywood's leading ladies — long-lasting, elegant</div><div class="card-price">From ₹899</div><a href="https://www.amazon.in/s?k=floral+oriental+perfume+women+india&tag=bollywoodedge-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
-    <div class="card"><div class="card-img">🫙</div><div class="card-body"><div class="card-cat">For Him</div><div class="card-title">Oud & Woody Cologne</div><div class="card-desc">Bold, masculine and distinctly desi — the scent of Bollywood's leading men</div><div class="card-price">From ₹799</div><a href="https://www.amazon.in/s?k=oud+woody+cologne+men+india&tag=bollywoodedge-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">🌸</div><div class="card-body"><div class="card-cat">For Her</div><div class="card-title">Floral Oriental Eau de Parfum</div><div class="card-desc">Inspired by the signature scents of Bollywood's leading ladies — long-lasting, elegant</div><div class="card-price">From ₹899</div><a href="https://www.amazon.in/s?k=floral+oriental+perfume+women+india&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">🫙</div><div class="card-body"><div class="card-cat">For Him</div><div class="card-title">Oud & Woody Cologne</div><div class="card-desc">Bold, masculine and distinctly desi — the scent of Bollywood's leading men</div><div class="card-price">From ₹799</div><a href="https://www.amazon.in/s?k=oud+woody+cologne+men+india&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
   </div>
 </div>
 
@@ -739,8 +739,8 @@ footer strong{color:#fff;}
   <div style="max-width:1200px;margin:0 auto;">
   <div class="section-header"><h2 class="section-title">🪷 Ethnic Wear</h2><span class="section-badge">WEDDING SEASON</span></div>
   <div class="grid">
-    <div class="card"><div class="card-img">🪷</div><div class="card-body"><div class="card-cat">Wedding Collection</div><div class="card-title">Banarasi Silk Lehenga</div><div class="card-desc">Bridal-quality weaves at accessible prices — available in 20+ colour combinations</div><div class="card-price">From ₹2,499</div><a href="https://www.amazon.in/s?k=banarasi+silk+lehenga&tag=bollywoodedge-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
-    <div class="card"><div class="card-img">🎋</div><div class="card-body"><div class="card-cat">Festive Ready</div><div class="card-title">Embroidered Salwar Kameez</div><div class="card-desc">Eid, Diwali and wedding season staple — mirror work, thread embroidery options</div><div class="card-price">From ₹1,199</div><a href="https://www.amazon.in/s?k=embroidered+salwar+kameez+festive&tag=bollywoodedge-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">🪷</div><div class="card-body"><div class="card-cat">Wedding Collection</div><div class="card-title">Banarasi Silk Lehenga</div><div class="card-desc">Bridal-quality weaves at accessible prices — available in 20+ colour combinations</div><div class="card-price">From ₹2,499</div><a href="https://www.amazon.in/s?k=banarasi+silk+lehenga&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">🎋</div><div class="card-body"><div class="card-cat">Festive Ready</div><div class="card-title">Embroidered Salwar Kameez</div><div class="card-desc">Eid, Diwali and wedding season staple — mirror work, thread embroidery options</div><div class="card-price">From ₹1,199</div><a href="https://www.amazon.in/s?k=embroidered+salwar+kameez+festive&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
   </div>
   </div>
 </div>
@@ -748,8 +748,8 @@ footer strong{color:#fff;}
 <div id="fitness" class="section">
   <div class="section-header"><h2 class="section-title">💪 Fitness</h2><span class="section-badge">STAR WORKOUT</span></div>
   <div class="grid">
-    <div class="card"><div class="card-img">🏋️</div><div class="card-body"><div class="card-cat">Gym Wear</div><div class="card-title">High-Waist Yoga Leggings</div><div class="card-desc">As worn by Bollywood's fittest actresses — squat-proof, moisture-wicking fabric</div><div class="card-price">From ₹699</div><a href="https://www.amazon.in/s?k=high+waist+yoga+leggings+women&tag=bollywoodedge-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
-    <div class="card"><div class="card-img">🧘</div><div class="card-body"><div class="card-cat">Wellness</div><div class="card-title">Premium Yoga Mat</div><div class="card-desc">Non-slip, eco-friendly — the workout essential for Bollywood's wellness routines</div><div class="card-price">From ₹999</div><a href="https://www.amazon.in/s?k=premium+yoga+mat+non+slip&tag=bollywoodedge-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">🏋️</div><div class="card-body"><div class="card-cat">Gym Wear</div><div class="card-title">High-Waist Yoga Leggings</div><div class="card-desc">As worn by Bollywood's fittest actresses — squat-proof, moisture-wicking fabric</div><div class="card-price">From ₹699</div><a href="https://www.amazon.in/s?k=high+waist+yoga+leggings+women&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">🧘</div><div class="card-body"><div class="card-cat">Wellness</div><div class="card-title">Premium Yoga Mat</div><div class="card-desc">Non-slip, eco-friendly — the workout essential for Bollywood's wellness routines</div><div class="card-price">From ₹999</div><a href="https://www.amazon.in/s?k=premium+yoga+mat+non+slip&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
   </div>
 </div>
 
@@ -757,8 +757,8 @@ footer strong{color:#fff;}
   <div style="max-width:1200px;margin:0 auto;">
   <div class="section-header"><h2 class="section-title">🎁 Gifts</h2><span class="section-badge">FOR EVERY OCCASION</span></div>
   <div class="grid">
-    <div class="card"><div class="card-img">🎁</div><div class="card-body"><div class="card-cat">Gift Sets</div><div class="card-title">Luxury Beauty Gift Hamper</div><div class="card-desc">Curated skincare and makeup gifts — perfect for birthdays, anniversaries, Eid & Diwali</div><div class="card-price">From ₹1,499</div><a href="https://www.amazon.in/s?k=luxury+beauty+gift+hamper+india&tag=bollywoodedge-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
-    <div class="card"><div class="card-img">💝</div><div class="card-body"><div class="card-cat">For Her</div><div class="card-title">Bollywood-Style Jewellery Gift Box</div><div class="card-desc">Layered necklace, earrings and bracelet set — elegant packaging, ready to gift</div><div class="card-price">From ₹999</div><a href="https://www.amazon.in/s?k=jewellery+gift+set+women+india&tag=bollywoodedge-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">🎁</div><div class="card-body"><div class="card-cat">Gift Sets</div><div class="card-title">Luxury Beauty Gift Hamper</div><div class="card-desc">Curated skincare and makeup gifts — perfect for birthdays, anniversaries, Eid & Diwali</div><div class="card-price">From ₹1,499</div><a href="https://www.amazon.in/s?k=luxury+beauty+gift+hamper+india&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">💝</div><div class="card-body"><div class="card-cat">For Her</div><div class="card-title">Bollywood-Style Jewellery Gift Box</div><div class="card-desc">Layered necklace, earrings and bracelet set — elegant packaging, ready to gift</div><div class="card-price">From ₹999</div><a href="https://www.amazon.in/s?k=jewellery+gift+set+women+india&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
   </div>
   </div>
 </div>
@@ -767,7 +767,7 @@ footer strong{color:#fff;}
   <p style="font-size:18px;font-family:'Playfair Display',serif;color:#fff;margin-bottom:8px;">BollywoodEdge</p>
   <p>Celebrity Style. Real Products. Every Day.</p>
   <p style="margin-top:12px;"><a href="/articles.html">Style Guides</a> &nbsp;·&nbsp; <a href="#fashion">Shop</a></p>
-  <p style="margin-top:16px;font-size:12px;">As an Amazon Associate, BollywoodEdge earns from qualifying purchases made through links on this site.<br>Amazon and the Amazon logo are trademarks of Amazon.com, Inc. or its affiliates.<br><br>Associate IDs: <strong>bollywoodedge-21</strong> (Amazon.in) · <strong>bollywoodedge-20</strong> (Amazon.com)</p>
+  <p style="margin-top:16px;font-size:12px;">As an Amazon Associate, BollywoodEdge earns from qualifying purchases made through links on this site.<br>Amazon and the Amazon logo are trademarks of Amazon.com, Inc. or its affiliates.<br><br>Associate IDs: <strong>bollywooded0f-21</strong> (Amazon.in) · <strong>bollywoodedge-20</strong> (Amazon.com)</p>
   <p style="margin-top:12px;font-size:12px;">© ${new Date().getFullYear()} BollywoodEdge</p>
 </footer>
 <script>
