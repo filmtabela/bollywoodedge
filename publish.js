@@ -29,7 +29,6 @@ const TOPICS = [
   { title: "Janhvi Kapoor Summer Style Guide", category: "Summer Fashion", tags: ["Janhvi Kapoor", "Summer", "Style"], emoji: "☀️", amazonQuery: "summer+dress+women" },
   { title: "Anushka Sharma Athleisure Guide", category: "Fitness", tags: ["Anushka Sharma", "Athleisure", "Style"], emoji: "🧘", amazonQuery: "women+athleisure+wear" },
   { title: "Vidya Balan Saree Style Decoded", category: "Ethnic Wear", tags: ["Vidya Balan", "Saree", "Traditional"], emoji: "🪷", amazonQuery: "cotton+silk+saree" },
-  { title: "Tiger Shroff Streetwear Guide", category: "Men's Style", tags: ["Tiger Shroff", "Streetwear", "Men"], emoji: "👟", amazonQuery: "men+joggers+streetwear" },
   { title: "Taapsee Pannu Minimalist Style", category: "Fashion", tags: ["Taapsee Pannu", "Minimalist", "Casual"], emoji: "🤍", amazonQuery: "minimalist+women+fashion" },
 ];
 
