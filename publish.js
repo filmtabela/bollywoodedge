@@ -58,12 +58,10 @@ function getArticleMetadata(articlesDir, slugs) {
     const filePath = path.join(articlesDir, `${slug}.html`);
     const content = fs.readFileSync(filePath, "utf8");
 
-    // Match title from <title> tag, strip suffix
     const titleMatch = content.match(/<title>([^<]+)<\/title>/);
     const rawTitle = titleMatch ? titleMatch[1] : slug;
     const title = rawTitle.replace(/\s*-\s*BollywoodEdge\s*$/, "").trim();
 
-    // Always prefer TOPICS as source of truth for category/emoji
     const matchedTopic = TOPICS.find(t => slugify(t.title) === slug);
     const category = matchedTopic ? matchedTopic.category : "Fashion";
     const emoji = matchedTopic ? matchedTopic.emoji : "✨";
@@ -788,9 +786,14 @@ sections.forEach(s => observer.observe(s));
 </html>`;
 }
 
+// ============================================================
+// THE ONLY CHANGE: git config lines added inside gitPush()
+// ============================================================
 function gitPush(slug) {
   console.log("\n📤 Pushing to GitHub...");
   try {
+    execSync(`git config user.email "filmtabela@gmail.com"`, { stdio: "inherit" });
+    execSync(`git config user.name "BollywoodEdge Bot"`, { stdio: "inherit" });
     execSync(`git add .`, { stdio: "inherit" });
     execSync(`git commit -m "Auto-publish: ${slug}"`, { stdio: "inherit" });
     execSync(`git push origin main`, { stdio: "inherit" });
