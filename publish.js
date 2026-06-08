@@ -30,17 +30,39 @@ const TOPICS = [
   { title: "Anushka Sharma Athleisure Guide", category: "Fitness", tags: ["Anushka Sharma", "Athleisure", "Style"], emoji: "🧘", amazonQuery: "women+athleisure+wear" },
   { title: "Vidya Balan Saree Style Decoded", category: "Ethnic Wear", tags: ["Vidya Balan", "Saree", "Traditional"], emoji: "🪷", amazonQuery: "cotton+silk+saree" },
   { title: "Taapsee Pannu Minimalist Style", category: "Fashion", tags: ["Taapsee Pannu", "Minimalist", "Casual"], emoji: "🤍", amazonQuery: "minimalist+women+fashion" },
+  // NEW TOPICS — batch 2
+  { title: "Kiara Advani Date Night Looks", category: "Fashion", tags: ["Kiara Advani", "Date Night", "Glam"], emoji: "✨", amazonQuery: "party+wear+dress+women+india" },
+  { title: "Shraddha Kapoor Everyday Style", category: "Fashion", tags: ["Shraddha Kapoor", "Casual", "Everyday"], emoji: "🌸", amazonQuery: "casual+western+wear+women" },
+  { title: "Varun Dhawan Casual Street Style", category: "Men's Style", tags: ["Varun Dhawan", "Street Style", "Casual"], emoji: "👟", amazonQuery: "men+casual+sneakers+streetwear+india" },
+  { title: "Kajol Ethnic Wear Guide", category: "Ethnic Wear", tags: ["Kajol", "Ethnic", "Traditional"], emoji: "🪷", amazonQuery: "salwar+kameez+ethnic+women" },
+  { title: "Disha Patani Beachwear Picks", category: "Summer Fashion", tags: ["Disha Patani", "Beach", "Summer"], emoji: "🌊", amazonQuery: "beachwear+coverup+women+india" },
+  { title: "Sidharth Malhotra Men's Grooming Guide", category: "Men's Style", tags: ["Sidharth Malhotra", "Grooming", "Men"], emoji: "💈", amazonQuery: "men+grooming+kit+india" },
+  { title: "Madhuri Dixit Timeless Style", category: "Fashion", tags: ["Madhuri Dixit", "Classic", "Elegance"], emoji: "👑", amazonQuery: "elegant+salwar+suit+women" },
+  { title: "Kriti Sanon Luxury Handbag Guide", category: "Accessories", tags: ["Kriti Sanon", "Handbag", "Luxury"], emoji: "👜", amazonQuery: "luxury+handbag+women+india" },
+  { title: "Shahid Kapoor Smart Casual Wardrobe", category: "Men's Style", tags: ["Shahid Kapoor", "Smart Casual", "Men"], emoji: "👔", amazonQuery: "smart+casual+men+outfit+india" },
+  { title: "Alia Bhatt Bridal Lehenga Inspiration", category: "Ethnic Wear", tags: ["Alia Bhatt", "Bridal", "Lehenga"], emoji: "🪷", amazonQuery: "bridal+lehenga+women" },
+  { title: "Jacqueline Fernandez Fitness Style", category: "Fitness", tags: ["Jacqueline Fernandez", "Fitness", "Yoga"], emoji: "🧘", amazonQuery: "yoga+wear+women+india" },
+  { title: "Ranbir Kapoor Airport Fashion Guide", category: "Men's Style", tags: ["Ranbir Kapoor", "Airport", "Travel"], emoji: "✈️", amazonQuery: "men+travel+outfit+india" },
+  { title: "Shilpa Shetty Wellness and Skincare", category: "Skincare", tags: ["Shilpa Shetty", "Wellness", "Skincare"], emoji: "🌿", amazonQuery: "face+serum+anti+aging+india" },
+  { title: "Nora Fatehi Party Wear Guide", category: "Fashion", tags: ["Nora Fatehi", "Party", "Dance"], emoji: "💃", amazonQuery: "party+wear+indo+western+women" },
+  { title: "Amitabh Bachchan Classic Men's Style", category: "Men's Style", tags: ["Amitabh Bachchan", "Classic", "Men"], emoji: "🎩", amazonQuery: "classic+men+kurta+pajama" },
 ];
 
 function slugify(title) {
   return title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
+// Returns slugs sorted by file modification time — newest first
 function getExistingSlugs(articlesDir) {
   if (!fs.existsSync(articlesDir)) return [];
   return fs.readdirSync(articlesDir)
     .filter(f => f.endsWith(".html"))
-    .map(f => f.replace(".html", ""));
+    .map(f => ({
+      slug: f.replace(".html", ""),
+      mtime: fs.statSync(path.join(articlesDir, f)).mtime.getTime()
+    }))
+    .sort((a, b) => b.mtime - a.mtime)
+    .map(f => f.slug);
 }
 
 function getTodaysTopic(existingSlugs) {
@@ -67,7 +89,8 @@ function getArticleMetadata(articlesDir, slugs) {
     const emojiCat = `${emoji} ${category}`;
 
     return { slug, title, emojiCat, category };
-  }).reverse();
+  });
+  // NOTE: no .reverse() here — slugs already come in newest-first order from getExistingSlugs
 }
 
 function getCategoryVisual(category) {
@@ -447,7 +470,7 @@ footer strong{color:#fff;}
     <div class="featured-card">
       <div style="flex-shrink:0">${featuredVisual}</div>
       <div>
-        <div class="cat-label">${articles[0].emojiCat} · FEATURED</div>
+        <div class="cat-label">${articles[0].emojiCat} · LATEST</div>
         <h2>${articles[0].title}</h2>
         <p class="featured-desc">The latest style guide — every look decoded with Amazon picks inside.</p>
         <a href="/articles/${articles[0].slug}.html" class="read-link">Read the full guide →</a>
@@ -785,9 +808,6 @@ sections.forEach(s => observer.observe(s));
 </html>`;
 }
 
-// ============================================================
-// THE ONLY CHANGE: git config lines added inside gitPush()
-// ============================================================
 function gitPush(slug) {
   console.log("\n📤 Pushing to GitHub...");
   try {
