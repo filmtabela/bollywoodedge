@@ -46,6 +46,37 @@ const TOPICS = [
   { title: "Shilpa Shetty Wellness and Skincare", category: "Skincare", tags: ["Shilpa Shetty", "Wellness", "Skincare"], emoji: "🌿", amazonQuery: "face+serum+anti+aging+india" },
   { title: "Nora Fatehi Party Wear Guide", category: "Fashion", tags: ["Nora Fatehi", "Party", "Dance"], emoji: "💃", amazonQuery: "party+wear+indo+western+women" },
   { title: "Amitabh Bachchan Classic Men's Style", category: "Men's Style", tags: ["Amitabh Bachchan", "Classic", "Men"], emoji: "🎩", amazonQuery: "classic+men+kurta+pajama" },
+  // HOLLYWOOD TOPICS
+  { title: "Margot Robbie Red Carpet Style Guide", category: "Hollywood Glam", tags: ["Margot Robbie", "Red Carpet", "Hollywood"], emoji: "⭐", amazonQuery: "red+carpet+evening+gown+women" },
+  { title: "Zendaya Fashion Icon Looks on Amazon", category: "Hollywood Glam", tags: ["Zendaya", "Fashion", "Style"], emoji: "✨", amazonQuery: "fashion+forward+women+dress" },
+  { title: "Ryan Gosling Ken Style Wardrobe Guide", category: "Hollywood Men", tags: ["Ryan Gosling", "Style", "Hollywood"], emoji: "🕺", amazonQuery: "men+casual+blazer+style" },
+  { title: "Jennifer Lopez Ageless Fitness Style", category: "Fitness", tags: ["Jennifer Lopez", "Fitness", "Glam"], emoji: "💪", amazonQuery: "women+gym+wear+stylish" },
+  { title: "Timothee Chalamet Avant-Garde Mens Fashion", category: "Hollywood Men", tags: ["Timothee Chalamet", "Fashion", "Men"], emoji: "🎬", amazonQuery: "men+fashion+forward+jacket" },
+  { title: "Selena Gomez Casual Street Style Picks", category: "Hollywood Glam", tags: ["Selena Gomez", "Street Style", "Casual"], emoji: "🌟", amazonQuery: "women+casual+chic+outfit" },
+  { title: "Chris Hemsworth Gym Workout Wardrobe", category: "Hollywood Men", tags: ["Chris Hemsworth", "Fitness", "Men"], emoji: "🏋️", amazonQuery: "men+gym+wear+tank+top" },
+  { title: "Taylor Swift Eras Tour Fashion Guide", category: "Hollywood Glam", tags: ["Taylor Swift", "Concert", "Fashion"], emoji: "🎤", amazonQuery: "sequin+dress+women+party" },
+  { title: "Angelina Jolie Minimalist Luxury Style", category: "Hollywood Glam", tags: ["Angelina Jolie", "Minimalist", "Luxury"], emoji: "👑", amazonQuery: "minimalist+luxury+dress+women" },
+  { title: "Tom Holland Street Style Guide", category: "Hollywood Men", tags: ["Tom Holland", "Street Style", "Men"], emoji: "🕷️", amazonQuery: "men+streetwear+hoodie+casual" },
+  { title: "Dua Lipa Pop Star Fashion on Amazon", category: "Hollywood Glam", tags: ["Dua Lipa", "Pop", "Fashion"], emoji: "🎵", amazonQuery: "women+pop+star+outfit+glam" },
+  { title: "Brad Pitt Classic Hollywood Mens Style", category: "Hollywood Men", tags: ["Brad Pitt", "Classic", "Men"], emoji: "🎩", amazonQuery: "men+classic+chino+blazer" },
+  { title: "Rihanna Fenty Beauty Makeup Guide", category: "Beauty", tags: ["Rihanna", "Fenty", "Makeup"], emoji: "💄", amazonQuery: "full+coverage+foundation+women" },
+  { title: "Beyonce Stage Glam Style Guide", category: "Hollywood Glam", tags: ["Beyonce", "Stage", "Glam"], emoji: "🌟", amazonQuery: "gold+bodysuit+women+glam" },
+  { title: "Leonardo DiCaprio Smart Casual Style Guide", category: "Hollywood Men", tags: ["Leonardo DiCaprio", "Smart Casual", "Men"], emoji: "🎬", amazonQuery: "men+smart+casual+chino+shirt" },
+  { title: "Hailey Bieber Model Off-Duty Style", category: "Hollywood Glam", tags: ["Hailey Bieber", "Model", "Street Style"], emoji: "✨", amazonQuery: "model+off+duty+women+outfit" },
+  { title: "Dwayne Johnson Fitness and Style", category: "Hollywood Men", tags: ["Dwayne Johnson", "Fitness", "Men"], emoji: "💪", amazonQuery: "men+oversized+gym+shirt" },
+  { title: "Sydney Sweeney Clean Girl Aesthetic", category: "Hollywood Glam", tags: ["Sydney Sweeney", "Clean Girl", "Aesthetic"], emoji: "🤍", amazonQuery: "women+clean+aesthetic+outfit" },
+  { title: "Harry Styles Bold Fashion Guide", category: "Hollywood Men", tags: ["Harry Styles", "Fashion", "Bold"], emoji: "🌈", amazonQuery: "men+bold+fashion+colourful+shirt" },
+  { title: "Kylie Jenner Glam Makeup and Style", category: "Beauty", tags: ["Kylie Jenner", "Glam", "Makeup"], emoji: "💋", amazonQuery: "glam+makeup+kit+lipstick+set" },
+  { title: "Pedro Pascal Rugged Casual Style", category: "Hollywood Men", tags: ["Pedro Pascal", "Rugged", "Men"], emoji: "🎬", amazonQuery: "men+rugged+casual+jacket" },
+  { title: "Priyanka Chopra Hollywood Red Carpet Looks", category: "Hollywood Glam", tags: ["Priyanka Chopra", "Hollywood", "Red Carpet"], emoji: "🌟", amazonQuery: "evening+gown+women+luxury" },
+  { title: "Florence Pugh Eclectic Fashion Style", category: "Hollywood Glam", tags: ["Florence Pugh", "Eclectic", "Bold"], emoji: "🌺", amazonQuery: "women+eclectic+fashion+dress" },
+  { title: "Jacob Elordi Tall Mens Fashion Guide", category: "Hollywood Men", tags: ["Jacob Elordi", "Style", "Tall"], emoji: "🕶️", amazonQuery: "men+slim+fit+trousers+shirt" },
+  { title: "Anya Taylor-Joy Gothic Glam Style", category: "Hollywood Glam", tags: ["Anya Taylor-Joy", "Gothic", "Glam"], emoji: "🖤", amazonQuery: "gothic+glam+women+dress+dark" },
+  { title: "Austin Butler Retro Rock Mens Style", category: "Hollywood Men", tags: ["Austin Butler", "Retro", "Rock"], emoji: "🎸", amazonQuery: "men+retro+rock+style+shirt" },
+  { title: "Olivia Rodrigo Gen-Z Fashion Picks", category: "Hollywood Glam", tags: ["Olivia Rodrigo", "Gen-Z", "Fashion"], emoji: "🎶", amazonQuery: "women+gen+z+fashion+y2k+style" },
+  { title: "Cillian Murphy Peaky Blinders Style Guide", category: "Hollywood Men", tags: ["Cillian Murphy", "Peaky Blinders", "Men"], emoji: "🎩", amazonQuery: "men+tweed+cap+waistcoat" },
+  { title: "Sabrina Carpenter Sweet Aesthetic Style", category: "Hollywood Glam", tags: ["Sabrina Carpenter", "Sweet", "Pop"], emoji: "🍬", amazonQuery: "women+sweet+aesthetic+mini+dress" },
+  { title: "Paul Mescal Simple Masculine Style", category: "Hollywood Men", tags: ["Paul Mescal", "Simple", "Men"], emoji: "🤎", amazonQuery: "men+simple+linen+shirt+shorts" },
 ];
 
 function slugify(title) {
@@ -200,6 +231,24 @@ function getCategoryVisual(category) {
         <path d="M83 85 Q100 78 117 85" stroke="#85B7EB" stroke-width="1.5" fill="none"/>
         <path d="M80 112 L78 125 M120 112 L122 125" stroke="#85B7EB" stroke-width="3" stroke-linecap="round"/>`,
       label: "MEN'S FITNESS"
+    },
+    "Hollywood Glam": {
+      bg: ["#0A0A1F", "#1A1050"], accent: "#C9A96E", mid: "#A07830",
+      shape: `<polygon points="100,25 106,42 124,42 110,53 116,70 100,59 84,70 90,53 76,42 94,42" fill="#C9A96E" opacity="0.9"/>
+        <circle cx="100" cy="90" r="16" fill="#A07830" opacity="0.4"/>
+        <path d="M84 112 L82 125 M116 112 L118 125" stroke="#C9A96E" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="100" cy="108" r="5" fill="#C9A96E" opacity="0.7"/>`,
+      label: "HOLLYWOOD"
+    },
+    "Hollywood Men": {
+      bg: ["#0F0F0F", "#1A1A2E"], accent: "#E8D5B7", mid: "#8B7355",
+      shape: `<rect x="82" y="38" width="36" height="48" rx="4" fill="#8B7355" opacity="0.7"/>
+        <circle cx="100" cy="30" r="11" fill="#E8D5B7" opacity="0.95"/>
+        <path d="M82 60 L76 112 M118 60 L124 112" stroke="#8B7355" stroke-width="8" stroke-linecap="round"/>
+        <path d="M82 60 L100 68 L118 60" fill="#A08060" opacity="0.8"/>
+        <line x1="88" y1="75" x2="112" y2="75" stroke="#E8D5B7" stroke-width="1" opacity="0.5"/>
+        <line x1="88" y1="85" x2="112" y2="85" stroke="#E8D5B7" stroke-width="1" opacity="0.3"/>`,
+      label: "HOLLYWOOD MEN"
     }
   };
 
@@ -227,16 +276,17 @@ async function generateArticle(topic) {
     max_tokens: 3000,
     messages: [{
       role: "user",
-      content: `Write a detailed SEO-optimised Bollywood style guide article about: "${topic.title}"
+      content: `Write a detailed SEO-optimised celebrity style guide article about: "${topic.title}"
 
 The article should:
 - Be 600-800 words
-- Have an engaging introduction mentioning the celebrity
+- Have an engaging introduction mentioning the celebrity and their iconic style
 - Include 4-5 specific product recommendations with descriptions (these will link to Amazon)
 - Have subheadings using H2 tags
-- Be written for Indian women aged 20-40 interested in Bollywood fashion
+- Be written for style-conscious readers aged 20-40 interested in celebrity fashion (both Bollywood and Hollywood)
+- Naturally include relevant Amazon shopping keywords throughout
 - End with a call to action to shop on Amazon
-- Be factual, engaging and editorial in tone like a magazine article
+- Be factual, engaging and editorial in tone like a fashion magazine article
 - Do NOT include any HTML tags, just plain text with subheadings marked as ## Subheading
 
 Return ONLY the article text, no preamble.`
