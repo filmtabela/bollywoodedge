@@ -7,6 +7,7 @@ const { execSync } = require("child_process");
 // CONFIGURATION
 // ============================================================
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+const PEXELS_API_KEY = process.env.PEXELS_API_KEY;
 const SITE_DIR = process.cwd();
 const ASSOCIATE_TAG = "bollywoodedge-20";
 const AMAZON_BASE = "https://www.amazon.com";
@@ -119,7 +120,10 @@ function getArticleMetadata(articlesDir, slugs) {
     const emoji = matchedTopic ? matchedTopic.emoji : "✨";
     const emojiCat = `${emoji} ${category}`;
 
-    return { slug, title, emojiCat, category };
+    const thumbMatch = content.match(/<meta name="pexels-thumb" content="([^"]+)">/);
+    const thumb = thumbMatch ? thumbMatch[1] : null;
+
+    return { slug, title, emojiCat, category, thumb };
   });
   // NOTE: no .reverse() here — slugs already come in newest-first order from getExistingSlugs
 }
@@ -269,6 +273,46 @@ function getCategoryVisual(category) {
   </svg>`;
 }
 
+async function fetchPexelsImage(query, category) {
+  try {
+    if (!PEXELS_API_KEY) return null;
+    // Build a clean search query — no celebrity names, just fashion/style keywords
+    const searchTerms = {
+      "Skincare": "skincare beauty woman glowing",
+      "Men's Style": "men fashion style outfit",
+      "Accessories": "fashion accessories jewellery woman",
+      "Ethnic Wear": "indian ethnic fashion woman",
+      "Beauty": "makeup beauty woman glamour",
+      "Fashion": "fashion woman style outfit",
+      "Fragrance": "perfume fragrance luxury",
+      "Fitness": "fitness gym workout woman",
+      "Summer Fashion": "summer fashion woman beach",
+      "Luxury": "luxury fashion woman elegant",
+      "Men's Fitness": "men gym fitness workout",
+      "Hollywood Glam": "red carpet fashion glamour woman",
+      "Hollywood Men": "men suit fashion style actor",
+    };
+    const q = searchTerms[category] || query.replace(/[^a-zA-Z ]/g, "").toLowerCase();
+    const url = `https://api.pexels.com/v1/search?query=${encodeURIComponent(q)}&per_page=10&orientation=landscape`;
+    const res = await fetch(url, { headers: { Authorization: PEXELS_API_KEY } });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data.photos || data.photos.length === 0) return null;
+    // Pick a random photo from results for variety
+    const photo = data.photos[Math.floor(Math.random() * data.photos.length)];
+    return {
+      url: photo.src.large2x || photo.src.large,
+      thumb: photo.src.medium,
+      photographer: photo.photographer,
+      photographerUrl: photo.photographer_url,
+      pexelsUrl: photo.url
+    };
+  } catch (e) {
+    console.log("Pexels fetch failed, using SVG fallback:", e.message);
+    return null;
+  }
+}
+
 async function generateArticle(topic) {
   console.log(`\n📝 Generating article: ${topic.title}...`);
   const message = await client.messages.create({
@@ -295,9 +339,13 @@ Return ONLY the article text, no preamble.`
   return message.content[0].text;
 }
 
-function buildArticleHTML(topic, articleText) {
+function buildArticleHTML(topic, articleText, pexelsImage = null) {
   const today = new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
   const visual = getCategoryVisual(topic.category);
+  const heroImageHTML = pexelsImage
+    ? `<div class="article-photo-hero" style="background-image:url('${pexelsImage.url}')"></div>
+       <div class="photo-credit">📷 <a href="${pexelsImage.pexelsUrl}" target="_blank" rel="nofollow noopener">${pexelsImage.photographer}</a> via Pexels</div>`
+    : `<div class="article-visual">${visual}</div>`;
   const bodyHTML = articleText.split("\n").map(line => {
     if (line.startsWith("## ")) return `<h2>${line.replace("## ", "")}</h2>`;
     if (line.trim() === "") return "";
@@ -311,6 +359,8 @@ function buildArticleHTML(topic, articleText) {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${topic.title} - BollywoodEdge</title>
 <meta name="description" content="${topic.title} - shop every piece on Amazon. Bollywood style decoded.">
+${pexelsImage ? `<meta property="og:image" content="${pexelsImage.url}">
+<meta name="pexels-thumb" content="${pexelsImage.thumb}">` : ''}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -330,6 +380,9 @@ header{background:var(--white);border-bottom:3px solid var(--pink);position:stic
 .tagline{font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;display:block;margin-top:-4px;}
 .header-badge{background:var(--pink);color:#fff;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;text-decoration:none;}
 .article-hero{background:linear-gradient(135deg,#1A0010,#6B0050);padding:48px 16px 36px;text-align:center;color:#fff;}
+.article-photo-hero{width:100%;height:380px;background-size:cover;background-position:center top;border-radius:0;margin-bottom:0;position:relative;}
+.photo-credit{font-size:10px;color:rgba(255,255,255,0.4);margin-top:4px;margin-bottom:16px;}
+.photo-credit a{color:rgba(255,255,255,0.5);text-decoration:none;}
 .article-visual{display:flex;justify-content:center;margin-bottom:20px;}
 .article-visual svg{border-radius:12px;max-width:200px;}
 .article-hero .cat-label{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--coral);font-weight:600;margin-bottom:12px;}
@@ -372,7 +425,7 @@ footer strong{color:#fff;}
   </div>
 </header>
 <div class="article-hero">
-  <div class="article-visual">${visual}</div>
+  ${heroImageHTML}
   <div class="cat-label">${topic.emoji} ${topic.category}</div>
   <h1>${topic.title}</h1>
   <div class="meta">Style Guide &mdash; ${today} &mdash; Amazon picks inside</div>
@@ -405,8 +458,11 @@ footer strong{color:#fff;}
 function buildArticlesIndexHTML(articles) {
   const gridCards = articles.slice(1).map(a => {
     const visual = getCategoryVisual(a.category);
+    const cardImg = a.thumb
+      ? `<div class="grid-visual"><img src="${a.thumb}" alt="${a.title}" style="width:100%;height:150px;object-fit:cover;display:block;border-radius:8px 8px 0 0;" loading="lazy"></div>`
+      : `<div class="grid-visual">${visual}</div>`;
     return `<div class="grid-card">
-      <div class="grid-visual">${visual}</div>
+      ${cardImg}
       <div class="grid-cat">${a.emojiCat}</div>
       <h3><a href="/articles/${a.slug}.html">${a.title}</a></h3>
       <a href="/articles/${a.slug}.html" class="read-more">Read more →</a>
@@ -564,11 +620,14 @@ function buildHomepageHTML(articles) {
 
   const gridCards = articles.slice(1, 7).map(a => {
     const visual = getCategoryVisual(a.category);
+    const cardImg = a.thumb
+      ? `<img src="${a.thumb}" alt="${a.title}" style="width:100%;height:160px;object-fit:cover;display:block;" loading="lazy">`
+      : visual.replace('width="200" height="150"', 'width="100%" height="160"');
     return `
     <a href="/articles/${a.slug}.html" style="text-decoration:none;">
       <div class="article-card">
         <div class="article-card-img" style="padding:0;overflow:hidden;">
-          ${visual.replace('width="200" height="150"', 'width="100%" height="160"')}
+          ${cardImg}
         </div>
         <div class="article-card-body">
           <div class="ac-cat">${a.emojiCat}</div>
@@ -885,7 +944,14 @@ async function main() {
   try {
     const articleText = await generateArticle(topic);
     const slug = slugify(topic.title);
-    const html = buildArticleHTML(topic, articleText);
+    console.log("🖼️  Fetching Pexels image...");
+    const pexelsImage = await fetchPexelsImage(topic.title, topic.category);
+    if (pexelsImage) {
+      console.log(`✅ Pexels image: ${pexelsImage.photographer}`);
+    } else {
+      console.log("⚠️  No Pexels image — using SVG visual");
+    }
+    const html = buildArticleHTML(topic, articleText, pexelsImage);
 
     const filePath = path.join(articlesDir, `${slug}.html`);
     fs.writeFileSync(filePath, html);
