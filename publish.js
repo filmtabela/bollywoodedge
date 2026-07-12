@@ -9,11 +9,63 @@ const { execSync } = require("child_process");
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 const PEXELS_API_KEY = process.env.PEXELS_API_KEY;
 const SITE_DIR = process.cwd();
-const ASSOCIATE_TAG = "bollywoodedge-20";
-const AMAZON_BASE = "https://www.amazon.com";
+// FIX 2026-07-12: article CTAs previously pointed at Amazon.com with the US
+// tag — Indian traffic was being sent to the wrong marketplace. Primary
+// market is India; US tag kept for future OneLink use.
+const ASSOCIATE_TAG = "bollywooded0f-21"; // Amazon.in
+const ASSOCIATE_TAG_US = "bollywoodedge-20"; // Amazon.com (reference only)
+const AMAZON_BASE = "https://www.amazon.in";
 // ============================================================
 
 const client = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
+
+// ============================================================
+// PRODUCT CATALOG — hero + long-tail affiliate products
+// asin: null → link falls back to a tagged Amazon search (still sets the
+// 24h cookie, never 404s). Fill in real ASINs over time for stronger
+// conversion. NEVER remove the tag parameter.
+// ============================================================
+const PRODUCTS = {
+  "hero-jeans":       { name: "Wide-Leg Baggy High-Waist Jeans",        keywords: "wide leg baggy jeans women high waisted", price: "\u20B9899\u20131,999",   asin: null },
+  "hero-airfryer":    { name: "Air Fryer 4\u20136L",                    keywords: "air fryer 5 litre",                       price: "\u20B94,500\u20139,000", asin: null },
+  "tail-sunscreen":   { name: "Centella Gel Sunscreen SPF 50",          keywords: "centella sunscreen gel spf 50",           price: "\u20B9300\u2013700",     asin: null },
+  "tail-vitc-serum":  { name: "Vitamin C Face Serum",                   keywords: "vitamin c serum face",                    price: "\u20B9350\u2013800",     asin: null },
+  "tail-kurti":       { name: "Festive Kurti Set",                      keywords: "kurti set women festive",                 price: "\u20B9600\u20131,500",   asin: null },
+  "tail-grooming":    { name: "Beard Grooming Kit",                     keywords: "beard grooming kit men",                  price: "\u20B9400\u20131,200",   asin: null },
+  "tail-silk-pillow": { name: "Satin Pillowcase + Heatless Curler Set", keywords: "satin pillowcase heatless curler",        price: "\u20B9300\u2013900",     asin: null },
+  "tail-makeup-kit":  { name: "Everyday Makeup Kit",                    keywords: "makeup kit women everyday",               price: "\u20B9500\u20131,500",   asin: null },
+  "tail-handbag":     { name: "Tote / Shoulder Handbag",                keywords: "tote bag women shoulder handbag",         price: "\u20B9700\u20132,000",   asin: null },
+  "tail-fitness":     { name: "Resistance Bands Set",                   keywords: "resistance bands set workout",            price: "\u20B9300\u20131,000",   asin: null },
+  "tail-perfume":     { name: "Long-Lasting Eau de Parfum",             keywords: "perfume long lasting women",              price: "\u20B9500\u20131,200",   asin: null },
+  "tail-leggings":    { name: "High-Waist Yoga Leggings",               keywords: "high waist yoga leggings women",          price: "\u20B9500\u20131,000",   asin: null },
+};
+
+// Default products injected per category (topic.products overrides this)
+const CATEGORY_PRODUCTS = {
+  "Skincare":        ["tail-vitc-serum", "tail-sunscreen"],
+  "Beauty":          ["tail-makeup-kit", "tail-vitc-serum"],
+  "Fashion":         ["hero-jeans", "tail-handbag"],
+  "Men's Style":     ["tail-grooming"],
+  "Ethnic Wear":     ["tail-kurti", "tail-handbag"],
+  "Fitness":         ["tail-leggings", "tail-fitness"],
+  "Men's Fitness":   ["tail-fitness", "tail-grooming"],
+  "Accessories":     ["tail-handbag"],
+  "Summer Fashion":  ["hero-jeans", "tail-sunscreen"],
+  "Luxury":          ["tail-handbag", "tail-perfume"],
+  "Fragrance":       ["tail-perfume"],
+  "Hollywood Glam":  ["hero-jeans", "tail-makeup-kit"],
+  "Hollywood Men":   ["tail-grooming"],
+};
+
+function affiliateLink(p) {
+  if (p.asin) return `${AMAZON_BASE}/dp/${p.asin}?tag=${ASSOCIATE_TAG}`;
+  return `${AMAZON_BASE}/s?k=${encodeURIComponent(p.keywords)}&tag=${ASSOCIATE_TAG}`;
+}
+
+function productsForTopic(topic) {
+  const ids = topic.products || CATEGORY_PRODUCTS[topic.category] || [];
+  return ids.filter(id => PRODUCTS[id]).map(id => ({ id, ...PRODUCTS[id] }));
+}
 
 const TOPICS = [
   { title: "Katrina Kaif Skincare Routine", category: "Skincare", tags: ["Katrina Kaif", "Skincare", "Glow"], emoji: "✨", amazonQuery: "vitamin+c+serum+skincare" },
@@ -78,6 +130,16 @@ const TOPICS = [
   { title: "Cillian Murphy Peaky Blinders Style Guide", category: "Hollywood Men", tags: ["Cillian Murphy", "Peaky Blinders", "Men"], emoji: "🎩", amazonQuery: "men+tweed+cap+waistcoat" },
   { title: "Sabrina Carpenter Sweet Aesthetic Style", category: "Hollywood Glam", tags: ["Sabrina Carpenter", "Sweet", "Pop"], emoji: "🍬", amazonQuery: "women+sweet+aesthetic+mini+dress" },
   { title: "Paul Mescal Simple Masculine Style", category: "Hollywood Men", tags: ["Paul Mescal", "Simple", "Men"], emoji: "🤎", amazonQuery: "men+simple+linen+shirt+shorts" },
+  // COMMERCIAL TOPICS — high buyer-intent, high-commission (added 2026-07-12)
+  { title: "The Baggy Jeans Airport Look Under 2000", category: "Fashion", tags: ["Airport Look", "Baggy Jeans", "Street Style"], emoji: "👖", amazonQuery: "wide+leg+baggy+jeans+women", products: ["hero-jeans", "tail-handbag"] },
+  { title: "The Korean Sunscreen Trend Taking Over Indian Skincare", category: "Skincare", tags: ["Korean Skincare", "Sunscreen", "Glass Skin"], emoji: "☀️", amazonQuery: "centella+sunscreen+gel+spf+50", products: ["tail-sunscreen"] },
+  { title: "Camera Ready Skin The Vitamin C Serum Guide", category: "Skincare", tags: ["Vitamin C", "Serum", "Glow"], emoji: "🍊", amazonQuery: "vitamin+c+serum+face", products: ["tail-vitc-serum", "tail-sunscreen"] },
+  { title: "The Air Fryer Diet How Actors Eat Fried and Stay Lean", category: "Fitness", tags: ["Air Fryer", "Healthy Eating", "Fitness"], emoji: "🍟", amazonQuery: "air+fryer+5+litre", products: ["hero-airfryer"] },
+  { title: "The Festive Kurti Edit Screen Inspired Looks Under 1500", category: "Ethnic Wear", tags: ["Kurti", "Festive", "Ethnic"], emoji: "🪷", amazonQuery: "kurti+set+women+festive", products: ["tail-kurti", "tail-handbag"] },
+  { title: "Heatless Curls and Silk Pillowcases Overnight Hair Secrets", category: "Beauty", tags: ["Hair Care", "Heatless Curls", "Silk Pillowcase"], emoji: "💇", amazonQuery: "satin+pillowcase+heatless+curler", products: ["tail-silk-pillow"] },
+  { title: "The 10 Minute No Makeup Look Whats Actually in the Kit", category: "Beauty", tags: ["No Makeup Look", "Makeup Kit", "Everyday Beauty"], emoji: "💄", amazonQuery: "makeup+kit+women+everyday", products: ["tail-makeup-kit", "tail-vitc-serum"] },
+  { title: "Inside a Celebrity Trainers Gym Bag Home Workout Gear", category: "Fitness", tags: ["Home Workout", "Resistance Bands", "Fitness Gear"], emoji: "🏋️", amazonQuery: "resistance+bands+set+workout", products: ["tail-fitness", "tail-leggings"] },
+  { title: "The Handbags Every Heroine Carries Affordable Versions", category: "Accessories", tags: ["Handbags", "Tote Bags", "Celebrity Style"], emoji: "👜", amazonQuery: "tote+bag+women+shoulder+handbag", products: ["tail-handbag", "hero-jeans"] },
 ];
 
 function slugify(title) {
@@ -313,8 +375,11 @@ async function fetchPexelsImage(query, category) {
   }
 }
 
-async function generateArticle(topic) {
+async function generateArticle(topic, products = []) {
   console.log(`\n📝 Generating article: ${topic.title}...`);
+  const productBlock = products.length
+    ? `\n\nWeave the following specific products into the article naturally — mention each of them at least once where it fits the style advice. The FIRST time you mention each product, write the mention EXACTLY in this marker format: [[product-id|natural phrase you'd use in the sentence]]. Example: "pair it with [[${products[0].id}|a structured tote bag]]". Use each marker exactly once; write about the product normally after that.\nProducts:\n${products.map(p => `- id: ${p.id} — ${p.name} (price range ${p.price})`).join("\n")}`
+    : "";
   const message = await client.messages.create({
     model: "claude-sonnet-4-5",
     max_tokens: 3000,
@@ -331,7 +396,7 @@ The article should:
 - Naturally include relevant Amazon shopping keywords throughout
 - End with a call to action to shop on Amazon
 - Be factual, engaging and editorial in tone like a fashion magazine article
-- Do NOT include any HTML tags, just plain text with subheadings marked as ## Subheading
+- Do NOT include any HTML tags, just plain text with subheadings marked as ## Subheading${productBlock}
 
 Return ONLY the article text, no preamble.`
     }]
@@ -339,18 +404,48 @@ Return ONLY the article text, no preamble.`
   return message.content[0].text;
 }
 
-function buildArticleHTML(topic, articleText, pexelsImage = null) {
+// Replace [[product-id|anchor text]] markers with tagged affiliate links;
+// strip any markers that didn't resolve so raw brackets never reach the page.
+function linkifyProducts(text, products) {
+  let out = text;
+  for (const p of products) {
+    const re = new RegExp(`\\[\\[${p.id}\\|([^\\]]+)\\]\\]`, "g");
+    out = out.replace(re, `<a href="${affiliateLink(p)}" target="_blank" rel="nofollow sponsored noopener">$1</a>`);
+  }
+  out = out.replace(/\[\[[^\]|]*\|([^\]]*)\]\]/g, "$1");
+  out = out.replace(/\[\[([^\]]*)\]\]/g, "$1");
+  return out;
+}
+
+function buildShopTheLookHTML(products) {
+  if (!products.length) return "";
+  const items = products.map(p =>
+    `<li style="margin-bottom:10px;font-size:14px;line-height:1.6;"><a href="${affiliateLink(p)}" target="_blank" rel="nofollow sponsored noopener" style="color:var(--pink);font-weight:600;text-decoration:none;">${p.name}</a> <span style="color:var(--muted);">(${p.price})</span></li>`
+  ).join("\n      ");
+  return `
+  <div class="shop-box">
+    <h3>🛍 Shop the Look</h3>
+    <p>Handpicked to match this guide — all on Amazon India.</p>
+    <ul style="list-style:none;margin:0;padding:0;">
+      ${items}
+    </ul>
+  </div>`;
+}
+
+function buildArticleHTML(topic, articleText, pexelsImage = null, products = []) {
   const today = new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
   const visual = getCategoryVisual(topic.category);
   const heroImageHTML = pexelsImage
     ? `<div class="article-photo-hero" style="background-image:url('${pexelsImage.url}')"></div>
        <div class="photo-credit">📷 <a href="${pexelsImage.pexelsUrl}" target="_blank" rel="nofollow noopener">${pexelsImage.photographer}</a> via Pexels</div>`
     : `<div class="article-visual">${visual}</div>`;
-  const bodyHTML = articleText.split("\n").map(line => {
+  const linkedText = linkifyProducts(articleText, products);
+  const bodyHTML = linkedText.split("\n").map(line => {
     if (line.startsWith("## ")) return `<h2>${line.replace("## ", "")}</h2>`;
     if (line.trim() === "") return "";
     return `<p>${line}</p>`;
   }).join("\n");
+  const shopTheLookHTML = buildShopTheLookHTML(products);
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -392,6 +487,7 @@ header{background:var(--white);border-bottom:3px solid var(--pink);position:stic
 .tag{background:rgba(255,255,255,0.15);color:#fff;font-size:11px;font-weight:600;padding:4px 12px;border-radius:12px;}
 .article-body{max-width:780px;margin:0 auto;padding:48px 16px;}
 .article-body p{font-size:16px;line-height:1.8;color:var(--text);margin-bottom:20px;}
+.article-body p a{color:var(--pink);font-weight:600;text-decoration:underline;text-decoration-color:#F0D0E8;text-underline-offset:3px;}
 .article-body h2{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--dark);margin:36px 0 16px;}
 .shop-box{background:var(--white);border:1px solid #F0D0E8;border-radius:16px;padding:24px;margin:32px 0;}
 .shop-box h3{font-family:'Playfair Display',serif;font-size:18px;color:var(--dark);margin-bottom:8px;}
@@ -438,10 +534,11 @@ footer strong{color:#fff;}
     As an Amazon Associate, BollywoodEdge earns from qualifying purchases. Prices subject to change.
   </div>
   ${bodyHTML}
+  ${shopTheLookHTML}
   <div class="shop-box">
     <h3>${topic.emoji} Shop ${topic.title.split(" ").slice(0,3).join(" ")} Picks on Amazon</h3>
     <p>Find the best products handpicked to match this look — available on Amazon with fast delivery.</p>
-    <a href="${AMAZON_BASE}/s?k=${topic.amazonQuery}&tag=${ASSOCIATE_TAG}" class="shop-btn" target="_blank" rel="nofollow">Shop on Amazon</a>
+    <a href="${AMAZON_BASE}/s?k=${topic.amazonQuery}&tag=${ASSOCIATE_TAG}" class="shop-btn" target="_blank" rel="nofollow sponsored noopener">Shop on Amazon</a>
   </div>
 </div>
 <footer>
@@ -595,7 +692,7 @@ footer strong{color:#fff;}
     <div class="shop-sidebar">
       <h3>Shop Bollywood Style</h3>
       <p>Find every look on Amazon — fast delivery, real products.</p>
-      <a href="https://www.amazon.in/?tag=bollywooded0f-21" class="shop-btn" target="_blank" rel="nofollow">Shop Amazon →</a>
+      <a href="https://www.amazon.in/?tag=bollywooded0f-21" class="shop-btn" target="_blank" rel="nofollow sponsored noopener">Shop Amazon →</a>
     </div>
   </div>
 </div>
@@ -820,9 +917,9 @@ footer strong{color:#fff;}
     <span class="section-badge">TRENDING</span>
   </div>
   <div class="grid">
-    <div class="card"><div class="card-img">👗</div><div class="card-body"><div class="card-cat">Celebrity Style</div><div class="card-title">Bollywood-Inspired Anarkali Suit</div><div class="card-desc">Elegant floral embroidery — as seen on your favourite stars at film premieres</div><div class="card-price">From ₹1,299</div><a href="https://www.amazon.in/s?k=anarkali+suit+women&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
-    <div class="card"><div class="card-img">👘</div><div class="card-body"><div class="card-cat">Alia Bhatt Inspired</div><div class="card-title">Printed Kurta Set</div><div class="card-desc">Contemporary Indian casual — perfect for brunch, events and everyday elegance</div><div class="card-price">From ₹899</div><a href="https://www.amazon.in/s?k=printed+kurta+set+women&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
-    <div class="card"><div class="card-img">🥻</div><div class="card-body"><div class="card-cat">Red Carpet Look</div><div class="card-title">Designer Saree Collection</div><div class="card-desc">Georgette, silk and chiffon sarees inspired by Bollywood award nights</div><div class="card-price">From ₹1,999</div><a href="https://www.amazon.in/s?k=designer+saree+women&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">👗</div><div class="card-body"><div class="card-cat">Celebrity Style</div><div class="card-title">Bollywood-Inspired Anarkali Suit</div><div class="card-desc">Elegant floral embroidery — as seen on your favourite stars at film premieres</div><div class="card-price">From ₹1,299</div><a href="https://www.amazon.in/s?k=anarkali+suit+women&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow sponsored noopener">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">👘</div><div class="card-body"><div class="card-cat">Alia Bhatt Inspired</div><div class="card-title">Printed Kurta Set</div><div class="card-desc">Contemporary Indian casual — perfect for brunch, events and everyday elegance</div><div class="card-price">From ₹899</div><a href="https://www.amazon.in/s?k=printed+kurta+set+women&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow sponsored noopener">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">🥻</div><div class="card-body"><div class="card-cat">Red Carpet Look</div><div class="card-title">Designer Saree Collection</div><div class="card-desc">Georgette, silk and chiffon sarees inspired by Bollywood award nights</div><div class="card-price">From ₹1,999</div><a href="https://www.amazon.in/s?k=designer+saree+women&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow sponsored noopener">Shop on Amazon →</a></div></div>
   </div>
 </div>
 
@@ -830,9 +927,9 @@ footer strong{color:#fff;}
   <div style="max-width:1200px;margin:0 auto;">
   <div class="section-header"><h2 class="section-title">💄 Beauty</h2><span class="section-badge">BESTSELLERS</span></div>
   <div class="grid">
-    <div class="card"><div class="card-img">💄</div><div class="card-body"><div class="card-cat">Katrina Kaif Picks</div><div class="card-title">Long-Wear Liquid Lipstick Set</div><div class="card-desc">Smudge-proof, transfer-resistant formula in 12 Bollywood-favourite shades</div><div class="card-price">From ₹499</div><a href="https://www.amazon.in/s?k=long+wear+liquid+lipstick+set&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
-    <div class="card"><div class="card-img">👁️</div><div class="card-body"><div class="card-cat">Glam Makeup</div><div class="card-title">Smoky Eye Palette</div><div class="card-desc">12 richly pigmented shades for the classic Bollywood smoky eye look</div><div class="card-price">From ₹699</div><a href="https://www.amazon.in/s?k=smoky+eye+palette&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
-    <div class="card"><div class="card-img">✨</div><div class="card-body"><div class="card-cat">Glow Essentials</div><div class="card-title">Highlighter & Blush Duo</div><div class="card-desc">Achieve the dewy Bollywood glow — perfect for photography and events</div><div class="card-price">From ₹399</div><a href="https://www.amazon.in/s?k=highlighter+blush+makeup&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">💄</div><div class="card-body"><div class="card-cat">Katrina Kaif Picks</div><div class="card-title">Long-Wear Liquid Lipstick Set</div><div class="card-desc">Smudge-proof, transfer-resistant formula in 12 Bollywood-favourite shades</div><div class="card-price">From ₹499</div><a href="https://www.amazon.in/s?k=long+wear+liquid+lipstick+set&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow sponsored noopener">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">👁️</div><div class="card-body"><div class="card-cat">Glam Makeup</div><div class="card-title">Smoky Eye Palette</div><div class="card-desc">12 richly pigmented shades for the classic Bollywood smoky eye look</div><div class="card-price">From ₹699</div><a href="https://www.amazon.in/s?k=smoky+eye+palette&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow sponsored noopener">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">✨</div><div class="card-body"><div class="card-cat">Glow Essentials</div><div class="card-title">Highlighter & Blush Duo</div><div class="card-desc">Achieve the dewy Bollywood glow — perfect for photography and events</div><div class="card-price">From ₹399</div><a href="https://www.amazon.in/s?k=highlighter+blush+makeup&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow sponsored noopener">Shop on Amazon →</a></div></div>
   </div>
   </div>
 </div>
@@ -840,9 +937,9 @@ footer strong{color:#fff;}
 <div id="accessories" class="section">
   <div class="section-header"><h2 class="section-title">💍 Accessories</h2><span class="section-badge">NEW IN</span></div>
   <div class="grid">
-    <div class="card"><div class="card-img">💍</div><div class="card-body"><div class="card-cat">Priyanka Chopra Style</div><div class="card-title">Statement Oxidised Jewellery Set</div><div class="card-desc">Necklace, earrings and maang tikka — complete the ethnic look</div><div class="card-price">From ₹799</div><a href="https://www.amazon.in/s?k=oxidised+jewellery+set+ethnic&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
-    <div class="card"><div class="card-img">👜</div><div class="card-body"><div class="card-cat">Street Style</div><div class="card-title">Embroidered Potli Bag</div><div class="card-desc">Bollywood wedding season essential — zari work, multiple colour options</div><div class="card-price">From ₹599</div><a href="https://www.amazon.in/s?k=embroidered+potli+bag&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
-    <div class="card"><div class="card-img">🕶️</div><div class="card-body"><div class="card-cat">Star-Spotted</div><div class="card-title">Oversized Cat-Eye Sunglasses</div><div class="card-desc">Airport look approved — UV400 protection, seen on leading Bollywood actresses</div><div class="card-price">From ₹449</div><a href="https://www.amazon.in/s?k=cat+eye+sunglasses+women&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">💍</div><div class="card-body"><div class="card-cat">Priyanka Chopra Style</div><div class="card-title">Statement Oxidised Jewellery Set</div><div class="card-desc">Necklace, earrings and maang tikka — complete the ethnic look</div><div class="card-price">From ₹799</div><a href="https://www.amazon.in/s?k=oxidised+jewellery+set+ethnic&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow sponsored noopener">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">👜</div><div class="card-body"><div class="card-cat">Street Style</div><div class="card-title">Embroidered Potli Bag</div><div class="card-desc">Bollywood wedding season essential — zari work, multiple colour options</div><div class="card-price">From ₹599</div><a href="https://www.amazon.in/s?k=embroidered+potli+bag&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow sponsored noopener">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">🕶️</div><div class="card-body"><div class="card-cat">Star-Spotted</div><div class="card-title">Oversized Cat-Eye Sunglasses</div><div class="card-desc">Airport look approved — UV400 protection, seen on leading Bollywood actresses</div><div class="card-price">From ₹449</div><a href="https://www.amazon.in/s?k=cat+eye+sunglasses+women&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow sponsored noopener">Shop on Amazon →</a></div></div>
   </div>
 </div>
 
@@ -850,8 +947,8 @@ footer strong{color:#fff;}
   <div style="max-width:1200px;margin:0 auto;">
   <div class="section-header"><h2 class="section-title">✨ Skincare</h2><span class="section-badge">DEEPIKA'S PICKS</span></div>
   <div class="grid">
-    <div class="card"><div class="card-img">🌿</div><div class="card-body"><div class="card-cat">Glass Skin</div><div class="card-title">Vitamin C Brightening Serum</div><div class="card-desc">The glow secret behind Bollywood's flawless complexions — dermatologist-tested</div><div class="card-price">From ₹599</div><a href="https://www.amazon.in/s?k=vitamin+c+brightening+serum&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
-    <div class="card"><div class="card-img">☀️</div><div class="card-body"><div class="card-cat">Daily Essential</div><div class="card-title">SPF 50 Tinted Sunscreen</div><div class="card-desc">Lightweight, non-greasy formula — all skin types, no white cast</div><div class="card-price">From ₹349</div><a href="https://www.amazon.in/s?k=spf+50+tinted+sunscreen+india&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">🌿</div><div class="card-body"><div class="card-cat">Glass Skin</div><div class="card-title">Vitamin C Brightening Serum</div><div class="card-desc">The glow secret behind Bollywood's flawless complexions — dermatologist-tested</div><div class="card-price">From ₹599</div><a href="https://www.amazon.in/s?k=vitamin+c+brightening+serum&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow sponsored noopener">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">☀️</div><div class="card-body"><div class="card-cat">Daily Essential</div><div class="card-title">SPF 50 Tinted Sunscreen</div><div class="card-desc">Lightweight, non-greasy formula — all skin types, no white cast</div><div class="card-price">From ₹349</div><a href="https://www.amazon.in/s?k=spf+50+tinted+sunscreen+india&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow sponsored noopener">Shop on Amazon →</a></div></div>
   </div>
   </div>
 </div>
@@ -859,8 +956,8 @@ footer strong{color:#fff;}
 <div id="fragrance" class="section">
   <div class="section-header"><h2 class="section-title">🌸 Fragrance</h2><span class="section-badge">STAR SCENTS</span></div>
   <div class="grid">
-    <div class="card"><div class="card-img">🌸</div><div class="card-body"><div class="card-cat">For Her</div><div class="card-title">Floral Oriental Eau de Parfum</div><div class="card-desc">Inspired by the signature scents of Bollywood's leading ladies — long-lasting, elegant</div><div class="card-price">From ₹899</div><a href="https://www.amazon.in/s?k=floral+oriental+perfume+women+india&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
-    <div class="card"><div class="card-img">🫙</div><div class="card-body"><div class="card-cat">For Him</div><div class="card-title">Oud & Woody Cologne</div><div class="card-desc">Bold, masculine and distinctly desi — the scent of Bollywood's leading men</div><div class="card-price">From ₹799</div><a href="https://www.amazon.in/s?k=oud+woody+cologne+men+india&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">🌸</div><div class="card-body"><div class="card-cat">For Her</div><div class="card-title">Floral Oriental Eau de Parfum</div><div class="card-desc">Inspired by the signature scents of Bollywood's leading ladies — long-lasting, elegant</div><div class="card-price">From ₹899</div><a href="https://www.amazon.in/s?k=floral+oriental+perfume+women+india&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow sponsored noopener">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">🫙</div><div class="card-body"><div class="card-cat">For Him</div><div class="card-title">Oud & Woody Cologne</div><div class="card-desc">Bold, masculine and distinctly desi — the scent of Bollywood's leading men</div><div class="card-price">From ₹799</div><a href="https://www.amazon.in/s?k=oud+woody+cologne+men+india&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow sponsored noopener">Shop on Amazon →</a></div></div>
   </div>
 </div>
 
@@ -868,8 +965,8 @@ footer strong{color:#fff;}
   <div style="max-width:1200px;margin:0 auto;">
   <div class="section-header"><h2 class="section-title">🪷 Ethnic Wear</h2><span class="section-badge">WEDDING SEASON</span></div>
   <div class="grid">
-    <div class="card"><div class="card-img">🪷</div><div class="card-body"><div class="card-cat">Wedding Collection</div><div class="card-title">Banarasi Silk Lehenga</div><div class="card-desc">Bridal-quality weaves at accessible prices — available in 20+ colour combinations</div><div class="card-price">From ₹2,499</div><a href="https://www.amazon.in/s?k=banarasi+silk+lehenga&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
-    <div class="card"><div class="card-img">🎋</div><div class="card-body"><div class="card-cat">Festive Ready</div><div class="card-title">Embroidered Salwar Kameez</div><div class="card-desc">Eid, Diwali and wedding season staple — mirror work, thread embroidery options</div><div class="card-price">From ₹1,199</div><a href="https://www.amazon.in/s?k=embroidered+salwar+kameez+festive&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">🪷</div><div class="card-body"><div class="card-cat">Wedding Collection</div><div class="card-title">Banarasi Silk Lehenga</div><div class="card-desc">Bridal-quality weaves at accessible prices — available in 20+ colour combinations</div><div class="card-price">From ₹2,499</div><a href="https://www.amazon.in/s?k=banarasi+silk+lehenga&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow sponsored noopener">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">🎋</div><div class="card-body"><div class="card-cat">Festive Ready</div><div class="card-title">Embroidered Salwar Kameez</div><div class="card-desc">Eid, Diwali and wedding season staple — mirror work, thread embroidery options</div><div class="card-price">From ₹1,199</div><a href="https://www.amazon.in/s?k=embroidered+salwar+kameez+festive&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow sponsored noopener">Shop on Amazon →</a></div></div>
   </div>
   </div>
 </div>
@@ -877,8 +974,8 @@ footer strong{color:#fff;}
 <div id="fitness" class="section">
   <div class="section-header"><h2 class="section-title">💪 Fitness</h2><span class="section-badge">STAR WORKOUT</span></div>
   <div class="grid">
-    <div class="card"><div class="card-img">🏋️</div><div class="card-body"><div class="card-cat">Gym Wear</div><div class="card-title">High-Waist Yoga Leggings</div><div class="card-desc">As worn by Bollywood's fittest actresses — squat-proof, moisture-wicking fabric</div><div class="card-price">From ₹699</div><a href="https://www.amazon.in/s?k=high+waist+yoga+leggings+women&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
-    <div class="card"><div class="card-img">🧘</div><div class="card-body"><div class="card-cat">Wellness</div><div class="card-title">Premium Yoga Mat</div><div class="card-desc">Non-slip, eco-friendly — the workout essential for Bollywood's wellness routines</div><div class="card-price">From ₹999</div><a href="https://www.amazon.in/s?k=premium+yoga+mat+non+slip&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">🏋️</div><div class="card-body"><div class="card-cat">Gym Wear</div><div class="card-title">High-Waist Yoga Leggings</div><div class="card-desc">As worn by Bollywood's fittest actresses — squat-proof, moisture-wicking fabric</div><div class="card-price">From ₹699</div><a href="https://www.amazon.in/s?k=high+waist+yoga+leggings+women&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow sponsored noopener">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">🧘</div><div class="card-body"><div class="card-cat">Wellness</div><div class="card-title">Premium Yoga Mat</div><div class="card-desc">Non-slip, eco-friendly — the workout essential for Bollywood's wellness routines</div><div class="card-price">From ₹999</div><a href="https://www.amazon.in/s?k=premium+yoga+mat+non+slip&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow sponsored noopener">Shop on Amazon →</a></div></div>
   </div>
 </div>
 
@@ -886,8 +983,8 @@ footer strong{color:#fff;}
   <div style="max-width:1200px;margin:0 auto;">
   <div class="section-header"><h2 class="section-title">🎁 Gifts</h2><span class="section-badge">FOR EVERY OCCASION</span></div>
   <div class="grid">
-    <div class="card"><div class="card-img">🎁</div><div class="card-body"><div class="card-cat">Gift Sets</div><div class="card-title">Luxury Beauty Gift Hamper</div><div class="card-desc">Curated skincare and makeup gifts — perfect for birthdays, anniversaries, Eid & Diwali</div><div class="card-price">From ₹1,499</div><a href="https://www.amazon.in/s?k=luxury+beauty+gift+hamper+india&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
-    <div class="card"><div class="card-img">💝</div><div class="card-body"><div class="card-cat">For Her</div><div class="card-title">Bollywood-Style Jewellery Gift Box</div><div class="card-desc">Layered necklace, earrings and bracelet set — elegant packaging, ready to gift</div><div class="card-price">From ₹999</div><a href="https://www.amazon.in/s?k=jewellery+gift+set+women+india&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">🎁</div><div class="card-body"><div class="card-cat">Gift Sets</div><div class="card-title">Luxury Beauty Gift Hamper</div><div class="card-desc">Curated skincare and makeup gifts — perfect for birthdays, anniversaries, Eid & Diwali</div><div class="card-price">From ₹1,499</div><a href="https://www.amazon.in/s?k=luxury+beauty+gift+hamper+india&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow sponsored noopener">Shop on Amazon →</a></div></div>
+    <div class="card"><div class="card-img">💝</div><div class="card-body"><div class="card-cat">For Her</div><div class="card-title">Bollywood-Style Jewellery Gift Box</div><div class="card-desc">Layered necklace, earrings and bracelet set — elegant packaging, ready to gift</div><div class="card-price">From ₹999</div><a href="https://www.amazon.in/s?k=jewellery+gift+set+women+india&tag=bollywooded0f-21" class="card-btn" target="_blank" rel="nofollow sponsored noopener">Shop on Amazon →</a></div></div>
   </div>
   </div>
 </div>
@@ -942,7 +1039,9 @@ async function main() {
   console.log(`📌 Today's topic: ${topic.title}`);
 
   try {
-    const articleText = await generateArticle(topic);
+    const products = productsForTopic(topic);
+    if (products.length) console.log(`🛍  Products: ${products.map(p => p.id).join(", ")}`);
+    const articleText = await generateArticle(topic, products);
     const slug = slugify(topic.title);
     console.log("🖼️  Fetching Pexels image...");
     const pexelsImage = await fetchPexelsImage(topic.title, topic.category);
@@ -951,7 +1050,7 @@ async function main() {
     } else {
       console.log("⚠️  No Pexels image — using SVG visual");
     }
-    const html = buildArticleHTML(topic, articleText, pexelsImage);
+    const html = buildArticleHTML(topic, articleText, pexelsImage, products);
 
     const filePath = path.join(articlesDir, `${slug}.html`);
     fs.writeFileSync(filePath, html);
