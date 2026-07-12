@@ -26,18 +26,18 @@ const client = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
 // conversion. NEVER remove the tag parameter.
 // ============================================================
 const PRODUCTS = {
-  "hero-jeans":       { name: "Wide-Leg Baggy High-Waist Jeans",        keywords: "wide leg baggy jeans women high waisted", price: "\u20B9899\u20131,999",   asin: null },
-  "hero-airfryer":    { name: "Air Fryer 4\u20136L",                    keywords: "air fryer 5 litre",                       price: "\u20B94,500\u20139,000", asin: null },
-  "tail-sunscreen":   { name: "Centella Gel Sunscreen SPF 50",          keywords: "centella sunscreen gel spf 50",           price: "\u20B9300\u2013700",     asin: null },
-  "tail-vitc-serum":  { name: "Vitamin C Face Serum",                   keywords: "vitamin c serum face",                    price: "\u20B9350\u2013800",     asin: null },
-  "tail-kurti":       { name: "Festive Kurti Set",                      keywords: "kurti set women festive",                 price: "\u20B9600\u20131,500",   asin: null },
-  "tail-grooming":    { name: "Beard Grooming Kit",                     keywords: "beard grooming kit men",                  price: "\u20B9400\u20131,200",   asin: null },
-  "tail-silk-pillow": { name: "Satin Pillowcase + Heatless Curler Set", keywords: "satin pillowcase heatless curler",        price: "\u20B9300\u2013900",     asin: null },
-  "tail-makeup-kit":  { name: "Everyday Makeup Kit",                    keywords: "makeup kit women everyday",               price: "\u20B9500\u20131,500",   asin: null },
-  "tail-handbag":     { name: "Tote / Shoulder Handbag",                keywords: "tote bag women shoulder handbag",         price: "\u20B9700\u20132,000",   asin: null },
-  "tail-fitness":     { name: "Resistance Bands Set",                   keywords: "resistance bands set workout",            price: "\u20B9300\u20131,000",   asin: null },
-  "tail-perfume":     { name: "Long-Lasting Eau de Parfum",             keywords: "perfume long lasting women",              price: "\u20B9500\u20131,200",   asin: null },
-  "tail-leggings":    { name: "High-Waist Yoga Leggings",               keywords: "high waist yoga leggings women",          price: "\u20B9500\u20131,000",   asin: null },
+  "hero-jeans":       { name: "Wide-Leg Baggy High-Waist Jeans",        keywords: "wide leg baggy jeans women high waisted", price: "\u20B9899\u20131,999",   asin: null, img: "denim jeans street style woman" },
+  "hero-airfryer":    { name: "Air Fryer 4\u20136L",                    keywords: "air fryer 5 litre",                       price: "\u20B94,500\u20139,000", asin: null, img: "air fryer kitchen healthy cooking" },
+  "tail-sunscreen":   { name: "Centella Gel Sunscreen SPF 50",          keywords: "centella sunscreen gel spf 50",           price: "\u20B9300\u2013700",     asin: null, img: "sunscreen skincare summer woman" },
+  "tail-vitc-serum":  { name: "Vitamin C Face Serum",                   keywords: "vitamin c serum face",                    price: "\u20B9350\u2013800",     asin: null, img: "face serum skincare glowing skin" },
+  "tail-kurti":       { name: "Festive Kurti Set",                      keywords: "kurti set women festive",                 price: "\u20B9600\u20131,500",   asin: null, img: "indian ethnic kurti fashion woman" },
+  "tail-grooming":    { name: "Beard Grooming Kit",                     keywords: "beard grooming kit men",                  price: "\u20B9400\u20131,200",   asin: null, img: "beard grooming men barber" },
+  "tail-silk-pillow": { name: "Satin Pillowcase + Heatless Curler Set", keywords: "satin pillowcase heatless curler",        price: "\u20B9300\u2013900",     asin: null, img: "silk pillow hair curls beauty" },
+  "tail-makeup-kit":  { name: "Everyday Makeup Kit",                    keywords: "makeup kit women everyday",               price: "\u20B9500\u20131,500",   asin: null, img: "makeup products cosmetics flatlay" },
+  "tail-handbag":     { name: "Tote / Shoulder Handbag",                keywords: "tote bag women shoulder handbag",         price: "\u20B9700\u20132,000",   asin: null, img: "tote handbag fashion woman street" },
+  "tail-fitness":     { name: "Resistance Bands Set",                   keywords: "resistance bands set workout",            price: "\u20B9300\u20131,000",   asin: null, img: "resistance bands home workout" },
+  "tail-perfume":     { name: "Long-Lasting Eau de Parfum",             keywords: "perfume long lasting women",              price: "\u20B9500\u20131,200",   asin: null, img: "perfume bottle luxury elegant" },
+  "tail-leggings":    { name: "High-Waist Yoga Leggings",               keywords: "high waist yoga leggings women",          price: "\u20B9500\u20131,000",   asin: null, img: "yoga leggings workout woman" },
 };
 
 // Default products injected per category (topic.products overrides this)
@@ -335,7 +335,7 @@ function getCategoryVisual(category) {
   </svg>`;
 }
 
-async function fetchPexelsImage(query, category) {
+async function fetchPexelsImage(query, category, overrideQuery = null) {
   try {
     if (!PEXELS_API_KEY) return null;
     // Build a clean search query — no celebrity names, just fashion/style keywords
@@ -354,7 +354,7 @@ async function fetchPexelsImage(query, category) {
       "Hollywood Glam": "red carpet fashion glamour woman",
       "Hollywood Men": "men suit fashion style actor",
     };
-    const q = searchTerms[category] || query.replace(/[^a-zA-Z ]/g, "").toLowerCase();
+    const q = overrideQuery || searchTerms[category] || query.replace(/[^a-zA-Z ]/g, "").toLowerCase();
     const url = `https://api.pexels.com/v1/search?query=${encodeURIComponent(q)}&per_page=10&orientation=landscape`;
     const res = await fetch(url, { headers: { Authorization: PEXELS_API_KEY } });
     if (!res.ok) return null;
@@ -432,7 +432,7 @@ function buildShopTheLookHTML(products) {
   </div>`;
 }
 
-function buildArticleHTML(topic, articleText, pexelsImage = null, products = []) {
+function buildArticleHTML(topic, articleText, pexelsImage = null, products = [], midImage = null) {
   const today = new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
   const visual = getCategoryVisual(topic.category);
   const heroImageHTML = pexelsImage
@@ -440,11 +440,21 @@ function buildArticleHTML(topic, articleText, pexelsImage = null, products = [])
        <div class="photo-credit">📷 <a href="${pexelsImage.pexelsUrl}" target="_blank" rel="nofollow noopener">${pexelsImage.photographer}</a> via Pexels</div>`
     : `<div class="article-visual">${visual}</div>`;
   const linkedText = linkifyProducts(articleText, products);
-  const bodyHTML = linkedText.split("\n").map(line => {
+  let bodyHTML = linkedText.split("\n").map(line => {
     if (line.startsWith("## ")) return `<h2>${line.replace("## ", "")}</h2>`;
     if (line.trim() === "") return "";
     return `<p>${line}</p>`;
   }).join("\n");
+  // Insert an optional second image after the first H2 section for a richer page
+  if (midImage && (!pexelsImage || midImage.url !== pexelsImage.url)) {
+    const midImageHTML = `<figure style="margin:28px 0;"><img src="${midImage.url}" alt="${topic.title}" style="width:100%;border-radius:16px;display:block;" loading="lazy"><figcaption style="font-size:11px;color:var(--muted);margin-top:6px;">📷 <a href="${midImage.pexelsUrl}" target="_blank" rel="nofollow noopener" style="color:var(--muted);">${midImage.photographer}</a> via Pexels</figcaption></figure>`;
+    const parts = bodyHTML.split("<h2>");
+    if (parts.length > 2) {
+      bodyHTML = parts[0] + "<h2>" + parts[1] + midImageHTML + "\n" + parts.slice(2).map(s => "<h2>" + s).join("");
+    } else {
+      bodyHTML = bodyHTML + "\n" + midImageHTML;
+    }
+  }
   const shopTheLookHTML = buildShopTheLookHTML(products);
 
   return `<!DOCTYPE html>
@@ -1052,14 +1062,18 @@ async function main() {
     if (products.length) console.log(`🛍  Products: ${products.map(p => p.id).join(", ")}`);
     const articleText = await generateArticle(topic, products);
     const slug = slugify(topic.title);
-    console.log("🖼️  Fetching Pexels image...");
-    const pexelsImage = await fetchPexelsImage(topic.title, topic.category);
+    console.log("🖼️  Fetching Pexels images...");
+    const heroQuery = products[0] && products[0].img ? products[0].img : null;
+    const pexelsImage = await fetchPexelsImage(topic.title, topic.category, heroQuery);
     if (pexelsImage) {
-      console.log(`✅ Pexels image: ${pexelsImage.photographer}`);
+      console.log(`✅ Hero image: ${pexelsImage.photographer}${heroQuery ? ` (query: ${heroQuery})` : ""}`);
     } else {
       console.log("⚠️  No Pexels image — using SVG visual");
     }
-    const html = buildArticleHTML(topic, articleText, pexelsImage, products);
+    const midQuery = products[1] && products[1].img ? products[1].img : null;
+    const midImage = await fetchPexelsImage(topic.title, topic.category, midQuery);
+    if (midImage) console.log(`✅ Mid-article image: ${midImage.photographer}${midQuery ? ` (query: ${midQuery})` : ""}`);
+    const html = buildArticleHTML(topic, articleText, pexelsImage, products, midImage);
 
     const filePath = path.join(articlesDir, `${slug}.html`);
     fs.writeFileSync(filePath, html);
