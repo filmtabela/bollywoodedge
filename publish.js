@@ -1033,6 +1033,15 @@ async function main() {
 
   const articlesDir = path.join(SITE_DIR, "articles");
   if (!fs.existsSync(articlesDir)) fs.mkdirSync(articlesDir, { recursive: true });
+  // One-time self-heal: repair old amazon.com links in existing articles
+  for (const f of fs.readdirSync(articlesDir).filter(x => x.endsWith(".html"))) {
+    const fp = path.join(articlesDir, f);
+    const c = fs.readFileSync(fp, "utf8");
+    const fixed = c
+      .split("https://www.amazon.com/s?").join("https://www.amazon.in/s?")
+      .split("tag=bollywoodedge-20").join("tag=bollywooded0f-21");
+    if (fixed !== c) { fs.writeFileSync(fp, fixed); console.log(`🔧 Fixed old links in ${f}`); }
+  }
 
   const existingSlugs = getExistingSlugs(articlesDir);
   const topic = getTodaysTopic(existingSlugs);
