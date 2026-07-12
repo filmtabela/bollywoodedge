@@ -229,7 +229,10 @@ function getArticleMetadata(articlesDir, slugs) {
     const thumbMatch = content.match(/<meta name="pexels-thumb" content="([^"]+)">/);
     const thumb = thumbMatch ? thumbMatch[1] : null;
 
-    return { slug, title, emojiCat, category, thumb };
+    const ogMatch = content.match(/<meta property="og:image" content="([^"]+)">/);
+    const hero = ogMatch ? ogMatch[1] : null;
+
+    return { slug, title, emojiCat, category, thumb, hero };
   });
   // NOTE: no .reverse() here — slugs already come in newest-first order from getExistingSlugs
 }
@@ -629,6 +632,9 @@ function buildArticlesIndexHTML(articles) {
     </div>`).join("\n");
 
   const featuredVisual = articles[0] ? getCategoryVisual(articles[0].category) : "";
+  const featuredIndexMedia = articles[0] && (articles[0].thumb || articles[0].hero)
+    ? `<img src="${articles[0].thumb || articles[0].hero}" alt="${articles[0].title}" style="width:200px;height:150px;object-fit:cover;border-radius:10px;display:block;" loading="lazy">`
+    : featuredVisual;
   const tickerItems = articles.slice(0, 5).map(a =>
     `<span>${a.emojiCat.split(" ")[0]} <b>${a.title}</b> — shop now</span>`
   ).join("");
@@ -726,7 +732,7 @@ footer strong{color:#fff;}
   <div class="main-col">
     ${articles[0] ? `
     <div class="featured-card">
-      <div style="flex-shrink:0">${featuredVisual}</div>
+      <div style="flex-shrink:0">${featuredIndexMedia}</div>
       <div>
         <div class="cat-label">${articles[0].emojiCat} · LATEST</div>
         <h2>${articles[0].title}</h2>
@@ -791,6 +797,10 @@ function buildHomepageHTML(articles) {
   }).join("\n");
 
   const featuredVisualResized = featuredVisual.replace('width="200" height="150"', 'width="100%" height="100%"');
+  const featuredPhoto = featuredArticle ? (featuredArticle.hero || featuredArticle.thumb) : null;
+  const featuredVisualHTML = featuredPhoto
+    ? `<div class="hero-article-visual" style="background-image:url('${featuredPhoto}');background-size:cover;background-position:center top;"></div>`
+    : `<div class="hero-article-visual">${featuredVisualResized}</div>`;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -942,7 +952,7 @@ footer strong{color:#fff;}
   ${featuredArticle ? `
   <a href="/articles/${featuredArticle.slug}.html" class="hero-article">
     <div class="hero-article-img">
-      <div class="hero-article-visual">${featuredVisualResized}</div>
+      ${featuredVisualHTML}
       <div class="hero-article-content">
         <div class="art-label">${featuredArticle.emojiCat} · LATEST</div>
         <h2>${featuredArticle.title}</h2>
