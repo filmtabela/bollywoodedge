@@ -1043,14 +1043,26 @@ async function main() {
 
   const articlesDir = path.join(SITE_DIR, "articles");
   if (!fs.existsSync(articlesDir)) fs.mkdirSync(articlesDir, { recursive: true });
-  // One-time self-heal: repair old amazon.com links in existing articles
+  // One-time self-heal: repair old amazon.com links + retrofit Shop the Look
+  // boxes into existing articles that don't have one yet
   for (const f of fs.readdirSync(articlesDir).filter(x => x.endsWith(".html"))) {
     const fp = path.join(articlesDir, f);
-    const c = fs.readFileSync(fp, "utf8");
+    let c = fs.readFileSync(fp, "utf8");
+    let changed = false;
     const fixed = c
       .split("https://www.amazon.com/s?").join("https://www.amazon.in/s?")
       .split("tag=bollywoodedge-20").join("tag=bollywooded0f-21");
-    if (fixed !== c) { fs.writeFileSync(fp, fixed); console.log(`🔧 Fixed old links in ${f}`); }
+    if (fixed !== c) { c = fixed; changed = true; console.log(`🔧 Fixed old links in ${f}`); }
+    if (!c.includes("Shop the Look")) {
+      const t = TOPICS.find(x => slugify(x.title) === f.replace(".html", ""));
+      const prods = t ? productsForTopic(t) : [];
+      if (prods.length && c.includes('<div class="shop-box">')) {
+        c = c.replace('<div class="shop-box">', buildShopTheLookHTML(prods).trim() + '\n  <div class="shop-box">');
+        changed = true;
+        console.log(`🛍  Retrofitted Shop the Look into ${f}`);
+      }
+    }
+    if (changed) fs.writeFileSync(fp, c);
   }
 
   const existingSlugs = getExistingSlugs(articlesDir);
