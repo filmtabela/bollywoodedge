@@ -441,6 +441,7 @@ function buildArticleHTML(topic, articleText, pexelsImage = null, products = [],
     : `<div class="article-visual">${visual}</div>`;
   const linkedText = linkifyProducts(articleText, products);
   let bodyHTML = linkedText.split("\n").map(line => {
+    if (line.startsWith("# ") && !line.startsWith("## ")) return "";
     if (line.startsWith("## ")) return `<h2>${line.replace("## ", "")}</h2>`;
     if (line.trim() === "") return "";
     return `<p>${line}</p>`;
