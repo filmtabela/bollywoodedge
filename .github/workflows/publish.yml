@@ -27,6 +27,7 @@ jobs:
       - name: Run publish script
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
         run: node publish.js
 
       - name: Commit and push new article
