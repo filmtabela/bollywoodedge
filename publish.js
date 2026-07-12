@@ -146,16 +146,20 @@ function slugify(title) {
   return title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
-// Returns slugs sorted by file modification time — newest first
+// Returns slugs newest-first, using the published-ts meta embedded in each
+// article (file mtimes are useless in CI — checkout stamps every file alike)
 function getExistingSlugs(articlesDir) {
   if (!fs.existsSync(articlesDir)) return [];
   return fs.readdirSync(articlesDir)
     .filter(f => f.endsWith(".html"))
-    .map(f => ({
-      slug: f.replace(".html", ""),
-      mtime: fs.statSync(path.join(articlesDir, f)).mtime.getTime()
-    }))
-    .sort((a, b) => b.mtime - a.mtime)
+    .map(f => {
+      const fp = path.join(articlesDir, f);
+      const content = fs.readFileSync(fp, "utf8");
+      const m = content.match(/<meta name="published-ts" content="(\d+)">/);
+      const ts = m ? parseInt(m[1], 10) : fs.statSync(fp).mtime.getTime();
+      return { slug: f.replace(".html", ""), ts };
+    })
+    .sort((a, b) => b.ts - a.ts)
     .map(f => f.slug);
 }
 
@@ -165,7 +169,47 @@ function getTodaysTopic(existingSlugs) {
     const topic = TOPICS[(dayOfYear + i) % TOPICS.length];
     if (!existingSlugs.includes(slugify(topic.title))) return topic;
   }
-  return TOPICS[dayOfYear % TOPICS.length];
+  return null; // every listed topic is already published
+}
+
+// When the fixed list is exhausted, ask Claude to invent one new
+// commercial-intent topic so the pipeline never runs dry
+async function generateNewTopic(existingSlugs) {
+  const categories = Object.keys(CATEGORY_PRODUCTS);
+  const productIds = Object.keys(PRODUCTS);
+  try {
+    const message = await client.messages.create({
+      model: "claude-sonnet-4-5",
+      max_tokens: 400,
+      messages: [{
+        role: "user",
+        content: `Invent ONE new article topic for a celebrity style + shopping blog for Indian readers (Bollywood, Hollywood, and high buyer-intent shopping guides).
+
+Rules:
+- The topic must be meaningfully different from all of these existing article slugs: ${existingSlugs.join(", ")}
+- Prefer buyer-intent shopping angles (specific product categories people search to buy) over pure celebrity profiles
+- "category" must be EXACTLY one of: ${categories.join(" | ")}
+- "products" must be 1-2 ids chosen from: ${productIds.join(", ")} that genuinely fit the topic
+- "amazonQuery" must be 3-5 lowercase words joined by +
+- "title" must contain no punctuation except spaces
+
+Respond with ONLY a raw JSON object (no markdown fences, no preamble) with keys: title, category, tags (array of 3 short strings), emoji (single emoji), amazonQuery, products (array of ids).`
+      }]
+    });
+    const raw = message.content[0].text.replace(/```json|```/g, "").trim();
+    const t = JSON.parse(raw);
+    if (!t || !t.title || !t.category) return null;
+    if (existingSlugs.includes(slugify(t.title))) return null;
+    if (!CATEGORY_PRODUCTS[t.category]) t.category = "Fashion";
+    if (!Array.isArray(t.tags)) t.tags = [t.category];
+    if (!t.emoji) t.emoji = "✨";
+    if (!t.amazonQuery) t.amazonQuery = "celebrity+style+fashion";
+    t.products = Array.isArray(t.products) ? t.products.filter(id => PRODUCTS[id]) : [];
+    return t;
+  } catch (e) {
+    console.log("⚠️  Topic generation failed:", e.message);
+    return null;
+  }
 }
 
 function getArticleMetadata(articlesDir, slugs) {
@@ -441,7 +485,6 @@ function buildArticleHTML(topic, articleText, pexelsImage = null, products = [],
     : `<div class="article-visual">${visual}</div>`;
   const linkedText = linkifyProducts(articleText, products);
   let bodyHTML = linkedText.split("\n").map(line => {
-    if (line.startsWith("# ") && !line.startsWith("## ")) return "";
     if (line.startsWith("## ")) return `<h2>${line.replace("## ", "")}</h2>`;
     if (line.trim() === "") return "";
     return `<p>${line}</p>`;
@@ -462,6 +505,7 @@ function buildArticleHTML(topic, articleText, pexelsImage = null, products = [],
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="published-ts" content="${Date.now()}">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${topic.title} - BollywoodEdge</title>
 <meta name="description" content="${topic.title} - shop every piece on Amazon. Bollywood style decoded.">
@@ -1032,6 +1076,7 @@ function gitPush(slug) {
     execSync(`git config user.name "BollywoodEdge Bot"`, { stdio: "inherit" });
     execSync(`git add .`, { stdio: "inherit" });
     execSync(`git commit -m "Auto-publish: ${slug}"`, { stdio: "inherit" });
+    execSync(`git pull --rebase origin main`, { stdio: "inherit" });
     execSync(`git push origin main`, { stdio: "inherit" });
     console.log("✅ Pushed to GitHub — Cloudflare will deploy in ~30 seconds");
   } catch (err) {
@@ -1063,11 +1108,28 @@ async function main() {
         console.log(`🛍  Retrofitted Shop the Look into ${f}`);
       }
     }
+    if (!c.includes('name="published-ts"')) {
+      const dm = c.match(/Style Guide &mdash; ([^&<]+) &mdash;/);
+      let ts = null;
+      if (dm) { const parsed = Date.parse(dm[1].trim()); if (!isNaN(parsed)) ts = parsed; }
+      if (!ts) ts = fs.statSync(fp).mtime.getTime();
+      c = c.replace('<meta charset="UTF-8">', `<meta charset="UTF-8">\n<meta name="published-ts" content="${ts}">`);
+      changed = true;
+    }
     if (changed) fs.writeFileSync(fp, c);
   }
 
   const existingSlugs = getExistingSlugs(articlesDir);
-  const topic = getTodaysTopic(existingSlugs);
+  let topic = getTodaysTopic(existingSlugs);
+  if (!topic) {
+    console.log("📚 All listed topics are published — asking Claude for a fresh topic...");
+    topic = await generateNewTopic(existingSlugs);
+  }
+  if (!topic) {
+    console.log("⚠️  No new topic available — exiting without publishing (nothing was overwritten).");
+    gitPush("self-heal-only"); // still commit any self-heal/backfill changes
+    return;
+  }
   console.log(`📌 Today's topic: ${topic.title}`);
 
   try {
