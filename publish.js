@@ -1091,6 +1091,7 @@ function gitPush(slug) {
     console.log("✅ Pushed to GitHub — Cloudflare will deploy in ~30 seconds");
   } catch (err) {
     console.error("❌ Git push failed:", err.message);
+    throw err;
   }
 }
 
