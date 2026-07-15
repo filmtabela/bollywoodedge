@@ -179,7 +179,7 @@ async function generateNewTopic(existingSlugs) {
   const productIds = Object.keys(PRODUCTS);
   try {
     const message = await client.messages.create({
-      model: "claude-sonnet-4-5",
+      model: "claude-haiku-4-5-20251001",
       max_tokens: 400,
       messages: [{
         role: "user",
@@ -428,7 +428,7 @@ async function generateArticle(topic, products = []) {
     ? `\n\nWeave the following specific products into the article naturally — mention each of them at least once where it fits the style advice. The FIRST time you mention each product, write the mention EXACTLY in this marker format: [[product-id|natural phrase you'd use in the sentence]]. Example: "pair it with [[${products[0].id}|a structured tote bag]]". Use each marker exactly once; write about the product normally after that.\nProducts:\n${products.map(p => `- id: ${p.id} — ${p.name} (price range ${p.price})`).join("\n")}`
     : "";
   const message = await client.messages.create({
-    model: "claude-sonnet-4-5",
+    model: "claude-haiku-4-5-20251001",
     max_tokens: 3000,
     messages: [{
       role: "user",
