@@ -5,6 +5,9 @@ import https from "https";
 
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
+  defaultHeaders: {
+    "anthropic-workspace-id": "wrkspc_01HZV5EzeEM42jg4JLB9UxR8",
+  },
 });
 
 const AMAZON_TAG = "bollywooded0f-21"; // Fixed affiliate tag
