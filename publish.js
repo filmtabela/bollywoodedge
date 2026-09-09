@@ -1,10 +1,14 @@
 import Anthropic from "@anthropic-ai/sdk";
 import * as fs from "fs";
 import * as path from "path";
+import https from "https";
 
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
+
+const AMAZON_TAG = "bollywooded0f-21"; // Fixed affiliate tag
+const ASIN_CACHE = {}; // Cache ASINs to avoid repeated lookups
 
 function createBatchRequest(
   custom_id,
@@ -84,6 +88,66 @@ async function pollBatchResults(batchId) {
   return [];
 }
 
+// Automated ASIN lookup via Amazon search (scrapes first result)
+async function getASINFromAmazon(productName) {
+  if (ASIN_CACHE[productName]) {
+    return ASIN_CACHE[productName];
+  }
+
+  return new Promise((resolve) => {
+    const searchUrl = `https://www.amazon.in/s?k=${encodeURIComponent(productName)}`;
+    
+    https.get(searchUrl, { headers: { "User-Agent": "Mozilla/5.0" } }, (res) => {
+      let data = "";
+      res.on("data", (chunk) => (data += chunk));
+      res.on("end", () => {
+        // Extract ASIN from Amazon search results (look for /dp/ASIN pattern)
+        const match = data.match(/\/dp\/([A-Z0-9]{10})/);
+        const asin = match ? match[1] : null;
+        
+        if (asin) {
+          ASIN_CACHE[productName] = asin;
+          console.log(`✓ Found ASIN for "${productName}": ${asin}`);
+        } else {
+          console.log(`✗ Could not find ASIN for "${productName}" — using search link`);
+        }
+        
+        resolve(asin);
+      });
+    }).on("error", () => {
+      console.log(`⚠ Error looking up "${productName}" — using search link`);
+      resolve(null);
+    });
+  });
+}
+
+// Replace [PRODUCT_LINK:...] tags with actual affiliate links
+async function injectAffiliateLinks(htmlContent) {
+  const productRegex = /\[PRODUCT_LINK:([^\|]+)\|([^\]]+)\]/g;
+  let match;
+  let result = htmlContent;
+
+  while ((match = productRegex.exec(htmlContent)) !== null) {
+    const productName = match[1].trim();
+    const description = match[2].trim();
+
+    const asin = await getASINFromAmazon(productName);
+    
+    let affiliateLink;
+    if (asin) {
+      // Direct product link with affiliate tag
+      affiliateLink = `<a href="https://amazon.in/dp/${asin}?tag=${AMAZON_TAG}" target="_blank" rel="noopener noreferrer">${productName}</a>`;
+    } else {
+      // Fallback to search link with affiliate tag
+      affiliateLink = `<a href="https://amazon.in/s?k=${encodeURIComponent(productName)}&tag=${AMAZON_TAG}" target="_blank" rel="noopener noreferrer">${productName}</a>`;
+    }
+
+    result = result.replace(match[0], affiliateLink);
+  }
+
+  return result;
+}
+
 function buildArticleHTML(title, content) {
   const slug = title
     .toLowerCase()
@@ -93,13 +157,27 @@ function buildArticleHTML(title, content) {
   const html = `<!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8">
   <title>${title} - BollywoodEdge</title>
   <meta name="description" content="${title}">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: Georgia, serif; line-height: 1.7; max-width: 700px; margin: 0 auto; padding: 20px; }
+    article { color: #333; }
+    h1 { font-size: 2.5em; margin-bottom: 10px; }
+    h2 { font-size: 1.8em; margin-top: 30px; }
+    p { margin: 15px 0; }
+    a { color: #d4af37; text-decoration: none; font-weight: bold; }
+    a:hover { text-decoration: underline; }
+  </style>
 </head>
 <body>
   <article>
     <h1>${title}</h1>
+    <p><em>Published: ${new Date().toLocaleDateString()}</em></p>
     ${content}
+    <hr>
+    <p><small>BollywoodEdge - Lifestyle & Fashion For Affluent India</small></p>
   </article>
 </body>
 </html>`;
@@ -109,14 +187,18 @@ function buildArticleHTML(title, content) {
 
 async function publishArticle(title, content) {
   const { slug, html } = buildArticleHTML(title, content);
+  
+  // Inject affiliate links (auto-lookup ASINs)
+  const htmlWithLinks = await injectAffiliateLinks(html);
+  
   const htmlPath = path.join("articles", `${slug}.html`);
 
   if (!fs.existsSync("articles")) {
     fs.mkdirSync("articles", { recursive: true });
   }
 
-  fs.writeFileSync(htmlPath, html);
-  console.log(`Published BollywoodEdge article: ${slug}`);
+  fs.writeFileSync(htmlPath, htmlWithLinks);
+  console.log(`✓ Published: ${slug}`);
 
   return slug;
 }
@@ -153,7 +235,7 @@ async function main() {
       }
     }
 
-    console.log(`Published ${articles.length} BollywoodEdge articles`);
+    console.log(`✓ Published ${articles.length} BollywoodEdge articles`);
     fs.unlinkSync("batch-id.txt");
     return;
   }
@@ -164,7 +246,7 @@ async function main() {
   const requests = [];
 
   for (const topic of topics) {
-    const systemPrompt = `You are a lifestyle and entertainment writer for BollywoodEdge, writing for affluent Indian readers aged 25-45. Focus on style, luxury, and aspirational content. Incorporate relevant product recommendations and affiliate links naturally.`;
+    const systemPrompt = `You are a lifestyle and entertainment writer for BollywoodEdge, writing for affluent Indian readers aged 25-45. Focus on style, luxury, and aspirational content. Incorporate relevant product recommendations naturally.`;
 
     const userPrompt = `Write an engaging BollywoodEdge article about: "${topic}"
 
@@ -173,10 +255,13 @@ Target: Affluent Indian readers interested in lifestyle, luxury, fashion
 Requirements:
 - 800-1200 words
 - Engaging, conversational tone
-- Include specific product/brand recommendations
+- Include 2-3 specific product recommendations
 - Format as HTML <p> and <h2> tags
-- Create natural opportunities for affiliate links (e.g., "Check out this brand on Amazon")
-- End with a style takeaway or inspiration`;
+- When mentioning products, use this format: [PRODUCT_LINK:Product Name|brief-description]
+  Example: [PRODUCT_LINK:Casio G-Shock GA2100|affordable luxury watch]
+- End with a style takeaway or inspiration
+
+The [PRODUCT_LINK:...] tags will be automatically converted to working affiliate links.`;
 
     requests.push(
       createBatchRequest(
