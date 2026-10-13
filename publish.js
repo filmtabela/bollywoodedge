@@ -900,6 +900,7 @@ function buildHomepageHTML(articles) {
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="p:domain_verify" content="589a5045a6c8621d9cd37b5db66ca208"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BollywoodEdge – Bollywood Fashion, Beauty & Style</title>
 <meta name="description" content="Shop Bollywood-inspired fashion, beauty, and accessories. Celebrity style picks, trending looks, and curated product recommendations from India's favourite film world.">
