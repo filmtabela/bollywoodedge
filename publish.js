@@ -212,6 +212,93 @@ Respond with ONLY a raw JSON object (no markdown fences, no preamble) with keys:
   }
 }
 
+
+// ============================================================
+// BUYING GUIDES (added 2026-10-13): high buyer-intent "Best N X under ₹Y"
+// lists with one product card per pick and a tagged Amazon.in button.
+// ============================================================
+function escapeHTML(t) {
+  return String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+async function generateBuyingGuideTopic(existingSlugs) {
+  const today = new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
+  const categories = Object.keys(CATEGORY_PRODUCTS);
+  try {
+    const message = await client.messages.create({
+      model: "claude-sonnet-4-5",
+      max_tokens: 400,
+      messages: [{ role: "user", content: `Today is ${today}. Invent ONE buying-guide article title for an Indian fashion and beauty shopping site (readers 20-40, shopping on Amazon India).
+
+Rules:
+- Format: "Best <number 5-10> <specific product type> <for occasion or person> Under <rupee amount>" or a close variant (e.g. "Best 7 Silk Sarees for Diwali Under 3000", "Best 6 Men's Kurta Sets for Wedding Guests Under 2000").
+- Make it timely for the next 3-4 weeks in India: Diwali, Karva Chauth, Bhai Dooj, wedding season, festive gifting, early winter wear. Otherwise evergreen fashion, beauty, grooming or accessories.
+- Must be clearly different from every one of these existing slugs: ${existingSlugs.slice(0, 150).join(", ")}
+- "category" must be EXACTLY one of: ${categories.join(" | ")}
+- "title" uses plain words and numbers only, no punctuation, no rupee symbol.
+- "pexelsQuery": 3-5 English words for a stock photo that matches the products.
+- "amazonQuery": 3-5 lowercase words joined by + for the overall product type.
+
+Respond with ONLY raw JSON with keys: title, category, tags (array of 3 short strings), emoji, pexelsQuery, amazonQuery.` }]
+    });
+    const t = JSON.parse(message.content[0].text.replace(/```json|```/g, "").trim());
+    if (!t || !t.title || existingSlugs.includes(slugify(t.title))) return null;
+    if (!CATEGORY_PRODUCTS[t.category]) t.category = "Fashion";
+    if (!Array.isArray(t.tags)) t.tags = [t.category];
+    t.emoji = t.emoji || "🛍";
+    t.amazonQuery = t.amazonQuery || "fashion+women";
+    t.products = [];
+    t.guide = true;
+    return t;
+  } catch (e) {
+    console.log("⚠️  Buying-guide topic generation failed:", e.message);
+    return null;
+  }
+}
+
+async function generateBuyingGuide(topic) {
+  console.log(`\n📝 Generating buying guide: ${topic.title}...`);
+  const message = await client.messages.create({
+    model: "claude-sonnet-4-5",
+    max_tokens: 3500,
+    messages: [{ role: "user", content: `Write a shopping buying guide for Indian readers titled "${topic.title}".
+
+Return ONLY raw JSON (no markdown fences) with this shape:
+{
+  "intro": "2-3 sentence intro, warm and practical, mention the occasion",
+  "items": [
+    {
+      "name": "specific product description a shopper would recognise, 3-8 words, no brand claims you cannot verify (e.g. 'Banarasi Art Silk Saree with Zari Border')",
+      "keywords": "4-7 lowercase words to search on Amazon India for exactly this item",
+      "price": "realistic price range in rupees, e.g. ₹1,200–2,500",
+      "best_for": "who or what occasion it suits, under 10 words",
+      "why": "2-3 sentences on why it works and how to style or use it"
+    }
+  ],
+  "tips": ["4 short buying tips specific to this product type (fabric, sizing, quality checks, returns)"],
+  "verdict": "2 sentences summing up the best overall pick and the best budget pick"
+}
+The number of items must match the number in the title. Every price must sit under the title's budget. Do not invent ratings, reviews or brand names.` }]
+  });
+  return JSON.parse(message.content[0].text.replace(/```json|```/g, "").trim());
+}
+
+function renderBuyingGuide(guide) {
+  const lines = [];
+  lines.push(guide.intro);
+  lines.push("## Our Top Picks");
+  (guide.items || []).forEach((it, i) => {
+    const url = `${AMAZON_BASE}/s?k=${encodeURIComponent(it.keywords || it.name)}&tag=${ASSOCIATE_TAG}`;
+    lines.push(`<div class="pick-card"><span class="pick-num">${i + 1}</span><h3>${escapeHTML(it.name)}</h3><div class="pick-meta"><b>${escapeHTML(it.price || "")}</b> · Best for: ${escapeHTML(it.best_for || "")}</div><p>${escapeHTML(it.why || "")}</p><a href="${url}" class="shop-btn" target="_blank" rel="nofollow sponsored noopener">Check price on Amazon →</a></div>`);
+  });
+  if (guide.tips && guide.tips.length) {
+    lines.push("## Buying Tips");
+    lines.push(`<ul style="margin:0 0 20px 20px;line-height:1.8;">${guide.tips.map(t => `<li>${escapeHTML(t)}</li>`).join("")}</ul>`);
+  }
+  if (guide.verdict) { lines.push("## Our Verdict"); lines.push(guide.verdict); }
+  return lines.join("\n");
+}
+
 function getArticleMetadata(articlesDir, slugs) {
   return slugs.map(slug => {
     const filePath = path.join(articlesDir, `${slug}.html`);
@@ -490,6 +577,7 @@ function buildArticleHTML(topic, articleText, pexelsImage = null, products = [],
   let bodyHTML = linkedText.split("\n").map(line => {
     if (line.startsWith("## ")) return `<h2>${line.replace("## ", "")}</h2>`;
     if (line.trim() === "") return "";
+    if (line.startsWith("<div") || line.startsWith("<ol") || line.startsWith("<ul")) return line;
     return `<p>${line}</p>`;
   }).join("\n");
   // Insert an optional second image after the first H2 section for a richer page
@@ -551,6 +639,12 @@ header{background:var(--white);border-bottom:3px solid var(--pink);position:stic
 .shop-box h3{font-family:'Playfair Display',serif;font-size:18px;color:var(--dark);margin-bottom:8px;}
 .shop-box p{font-size:14px;color:var(--muted);margin-bottom:16px;}
 .shop-btn{display:inline-block;background:var(--pink);color:#fff;font-weight:600;font-size:14px;padding:10px 24px;border-radius:24px;text-decoration:none;}
+.pick-card{background:var(--white);border:1px solid #F0D0E8;border-radius:16px;padding:20px 22px;margin:18px 0;box-shadow:0 2px 10px rgba(233,30,140,0.06);}
+.pick-card .pick-num{display:inline-block;background:var(--pink);color:#fff;font-weight:700;font-size:13px;width:28px;height:28px;line-height:28px;text-align:center;border-radius:50%;margin-right:8px;}
+.pick-card h3{display:inline;font-family:'Playfair Display',serif;font-size:19px;color:var(--dark);}
+.pick-card .pick-meta{font-size:13px;color:var(--muted);margin:10px 0 8px;}
+.pick-card .pick-meta b{color:var(--pink);}
+.pick-card p{font-size:15px;line-height:1.7;margin-bottom:14px;}
 .disclosure{background:#FFF0F7;border-left:4px solid var(--pink);padding:10px 16px;font-size:12px;color:var(--muted);margin-bottom:32px;}
 footer{background:var(--dark);color:rgba(255,255,255,0.6);text-align:center;padding:32px 16px;font-size:13px;line-height:1.8;margin-top:48px;}
 footer a{color:var(--coral);text-decoration:none;}
@@ -1131,7 +1225,9 @@ async function main() {
   }
 
   const existingSlugs = getExistingSlugs(articlesDir);
-  let topic = getTodaysTopic(existingSlugs);
+  // Buying guides first (highest purchase intent); fall back to the old topic flow.
+  let topic = await generateBuyingGuideTopic(existingSlugs);
+  if (!topic) topic = getTodaysTopic(existingSlugs);
   if (!topic) {
     console.log("📚 All listed topics are published — asking Claude for a fresh topic...");
     topic = await generateNewTopic(existingSlugs);
@@ -1146,18 +1242,20 @@ async function main() {
   try {
     const products = productsForTopic(topic);
     if (products.length) console.log(`🛍  Products: ${products.map(p => p.id).join(", ")}`);
-    const articleText = await generateArticle(topic, products);
+    const articleText = topic.guide
+      ? renderBuyingGuide(await generateBuyingGuide(topic))
+      : await generateArticle(topic, products);
     const slug = slugify(topic.title);
     console.log("🖼️  Fetching Pexels images...");
-    const heroQuery = products[0] && products[0].img ? products[0].img : null;
+    const heroQuery = topic.pexelsQuery || (products[0] && products[0].img ? products[0].img : null);
     const pexelsImage = await fetchPexelsImage(topic.title, topic.category, heroQuery);
     if (pexelsImage) {
       console.log(`✅ Hero image: ${pexelsImage.photographer}${heroQuery ? ` (query: ${heroQuery})` : ""}`);
     } else {
       console.log("⚠️  No Pexels image — using SVG visual");
     }
-    const midQuery = products[1] && products[1].img ? products[1].img : null;
-    const midImage = await fetchPexelsImage(topic.title, topic.category, midQuery);
+    const midQuery = topic.guide ? null : (products[1] && products[1].img ? products[1].img : null);
+    const midImage = topic.guide ? null : await fetchPexelsImage(topic.title, topic.category, midQuery);
     if (midImage) console.log(`✅ Mid-article image: ${midImage.photographer}${midQuery ? ` (query: ${midQuery})` : ""}`);
     const html = buildArticleHTML(topic, articleText, pexelsImage, products, midImage);
 
