@@ -1,7 +1,7 @@
 name: BollywoodEdge Pinterest Pins
 # Posts up to 3 unpinned articles a day to the BollywoodEdge Pinterest board.
-# Uses no Anthropic tokens. Does nothing until PINTEREST_TOKEN and
-# PINTEREST_BOARD_ID are added under Settings → Secrets → Actions.
+# Uses no Anthropic tokens. Does nothing until PINTEREST_TOKEN is added under
+# Settings → Secrets → Actions. Finds or creates the board automatically.
 
 on:
   schedule:

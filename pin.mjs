@@ -3,23 +3,47 @@
 // posts each as a Pin linking back to imraankhan.in, and records it in pinned.json.
 //
 // Needs two GitHub repo secrets:
-//   PINTEREST_TOKEN     — Pinterest API v5 access token with pins:write + boards:read
-//   PINTEREST_BOARD_ID  — the numeric ID of the BollywoodEdge board to pin into
-// If either is missing the script exits cleanly (green) and does nothing.
+//   PINTEREST_TOKEN     — Pinterest API v5 access token (scopes: pins:read, pins:write, boards:read, boards:write)
+//   PINTEREST_BOARD_ID  — optional. If not set, the script uses the board named BOARD_NAME,
+//                         creating it if it doesn't exist.
+// If the token is missing the script exits cleanly (green) and does nothing.
 
 import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
 
 const TOKEN = process.env.PINTEREST_TOKEN;
-const BOARD = process.env.PINTEREST_BOARD_ID;
+let BOARD = process.env.PINTEREST_BOARD_ID;
+const BOARD_NAME = process.env.PINTEREST_BOARD_NAME || 'Bollywood Style on Amazon';
 const PINS_PER_RUN = parseInt(process.env.PINS_PER_RUN || '3', 10);
 const SITE = 'https://imraankhan.in';
 const LEDGER = 'pinned.json';
 
-if (!TOKEN || !BOARD) {
-  console.log('Pinterest secrets not set yet (PINTEREST_TOKEN / PINTEREST_BOARD_ID). Nothing to do.');
+if (!TOKEN) {
+  console.log('PINTEREST_TOKEN secret not set yet. Nothing to do.');
   process.exit(0);
+}
+
+const api = (p, opts = {}) => fetch(`https://api.pinterest.com/v5${p}`, {
+  ...opts, headers: { Authorization: `Bearer ${TOKEN}`, 'Content-Type': 'application/json' },
+});
+
+if (!BOARD) {
+  const r = await api('/boards?page_size=100');
+  if (!r.ok) { console.error(`❌ Could not list boards: HTTP ${r.status} ${(await r.text()).slice(0, 300)}`); process.exit(1); }
+  const found = ((await r.json()).items || []).find(b => b.name.toLowerCase() === BOARD_NAME.toLowerCase());
+  if (found) BOARD = found.id;
+  else {
+    const c = await api('/boards', { method: 'POST', body: JSON.stringify({
+      name: BOARD_NAME,
+      description: 'Bollywood and celebrity looks you can shop on Amazon India — outfits, jewellery, grooming and beauty under budget. From imraankhan.in',
+      privacy: 'PUBLIC',
+    }) });
+    if (!c.ok) { console.error(`❌ Could not create board: HTTP ${c.status} ${(await c.text()).slice(0, 300)}`); process.exit(1); }
+    BOARD = (await c.json()).id;
+    console.log(`Created board "${BOARD_NAME}"`);
+  }
+  console.log(`Using board "${BOARD_NAME}" (${BOARD})`);
 }
 
 const pinned = fs.existsSync(LEDGER) ? JSON.parse(fs.readFileSync(LEDGER, 'utf8')) : {};
@@ -57,11 +81,7 @@ for (const a of candidates.slice(0, PINS_PER_RUN)) {
     alt_text: a.title.slice(0, 500),
     media_source: { source_type: 'image_url', url: a.image },
   };
-  const res = await fetch('https://api.pinterest.com/v5/pins', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${TOKEN}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
+  const res = await api('/pins', { method: 'POST', body: JSON.stringify(body) });
   const text = await res.text();
   if (res.ok) {
     const id = JSON.parse(text).id;
