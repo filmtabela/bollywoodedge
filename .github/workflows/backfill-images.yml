@@ -1,0 +1,34 @@
+name: Backfill article images
+
+# Zero Claude tokens: fills missing hero photos (Pexels) on older articles and
+# rebuilds the article index + homepage thumbnails. Runs once when this file is
+# pushed, and can be re-run any time from the Actions tab.
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/backfill-images.yml']
+  workflow_dispatch:
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install
+      - name: Backfill hero images (commits and pushes itself)
+        env:
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+          ANTHROPIC_API_KEY: unused
+        run: node publish.js --backfill-images
