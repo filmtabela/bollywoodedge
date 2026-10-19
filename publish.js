@@ -488,25 +488,89 @@ async function fetchPexelsImage(query, category, overrideQuery = null) {
       "Hollywood Glam": "red carpet fashion glamour woman",
       "Hollywood Men": "men suit fashion style actor",
     };
-    const q = overrideQuery || searchTerms[category] || query.replace(/[^a-zA-Z ]/g, "").toLowerCase();
-    const url = `https://api.pexels.com/v1/search?query=${encodeURIComponent(q)}&per_page=10&orientation=landscape`;
-    const res = await fetch(url, { headers: { Authorization: PEXELS_API_KEY } });
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (!data.photos || data.photos.length === 0) return null;
-    // Pick a random photo from results for variety
-    const photo = data.photos[Math.floor(Math.random() * data.photos.length)];
-    return {
-      url: photo.src.large2x || photo.src.large,
-      thumb: photo.src.medium,
-      photographer: photo.photographer,
-      photographerUrl: photo.photographer_url,
-      pexelsUrl: photo.url
-    };
+    // FIX 2026-10-19: try the specific query, then the category term, then a
+    // generic one, and skip photos already used elsewhere on the site, so an
+    // article is never published without a hero image just because one
+    // search came back empty or repeated.
+    const generic = query.replace(/[^a-zA-Z ]/g, "").toLowerCase();
+    const queries = [...new Set([overrideQuery, searchTerms[category], "indian fashion style woman", generic].filter(Boolean))];
+    for (const q of queries) {
+      const url = `https://api.pexels.com/v1/search?query=${encodeURIComponent(q)}&per_page=40&orientation=landscape`;
+      const res = await fetch(url, { headers: { Authorization: PEXELS_API_KEY } });
+      if (!res.ok) { console.log(`Pexels HTTP ${res.status} for "${q}"`); continue; }
+      const data = await res.json();
+      const fresh = (data.photos || []).filter(p => !USED_PHOTO_IDS.has(String(p.id)));
+      if (!fresh.length) continue;
+      const photo = fresh[Math.floor(Math.random() * Math.min(fresh.length, 10))];
+      USED_PHOTO_IDS.add(String(photo.id));
+      return {
+        url: photo.src.large2x || photo.src.large,
+        thumb: photo.src.medium,
+        photographer: photo.photographer,
+        photographerUrl: photo.photographer_url,
+        pexelsUrl: photo.url
+      };
+    }
+    return null;
   } catch (e) {
     console.log("Pexels fetch failed, using SVG fallback:", e.message);
     return null;
   }
+}
+
+// Photo IDs already on the site, so new picks don't repeat them.
+const USED_PHOTO_IDS = new Set();
+function collectUsedPhotoIds(articlesDir) {
+  for (const f of fs.readdirSync(articlesDir).filter(x => x.endsWith(".html"))) {
+    const c = fs.readFileSync(path.join(articlesDir, f), "utf8");
+    for (const m of c.matchAll(/images\.pexels\.com\/photos\/(\d+)\//g)) USED_PHOTO_IDS.add(m[1]);
+  }
+}
+
+const PHOTO_CSS = `.article-photo-hero{width:100%;height:380px;background-size:cover;background-position:center top;border-radius:0;margin-bottom:0;position:relative;}
+.photo-credit{font-size:10px;color:rgba(255,255,255,0.4);margin-top:4px;margin-bottom:16px;}`;
+
+// Added 2026-10-19: give older articles (published before Pexels was wired in)
+// a hero photo + og:image so they show thumbnails and can be pinned.
+// Zero Claude tokens — Pexels only. limit caps how many are fixed per run.
+async function backfillMissingImages(articlesDir, limit = Infinity) {
+  if (!PEXELS_API_KEY) { console.log("⚠️  PEXELS_API_KEY not set — skipping image backfill"); return 0; }
+  const missing = fs.readdirSync(articlesDir)
+    .filter(x => x.endsWith(".html"))
+    .filter(f => !fs.readFileSync(path.join(articlesDir, f), "utf8").includes('property="og:image"'));
+  if (!missing.length) return 0;
+  console.log(`🖼️  ${missing.length} articles have no hero image — backfilling up to ${limit === Infinity ? "all" : limit}`);
+  let fixed = 0;
+  for (const f of missing) {
+    if (fixed >= limit) break;
+    const fp = path.join(articlesDir, f);
+    let c = fs.readFileSync(fp, "utf8");
+    const slug = f.replace(".html", "");
+    const t = TOPICS.find(x => slugify(x.title) === slug);
+    const catMatch = c.match(/class="cat-label">([^<]*)</);
+    const category = t ? t.category : (catMatch ? catMatch[1].replace(/[^\p{L}' ]/gu, "").trim() : "Fashion");
+    const prods = t ? productsForTopic(t) : [];
+    const q = (t && t.pexelsQuery) || (prods[0] && prods[0].img) || null;
+    const titleMatch = c.match(/<title>([^<]+)<\/title>/);
+    const title = titleMatch ? titleMatch[1] : slug;
+    const img = await fetchPexelsImage(title, category, q);
+    if (!img) { console.log(`   ✗ no photo found for ${f}`); continue; }
+    const heroHTML = `<div class="article-photo-hero" style="background-image:url('${img.url}')"></div>
+       <div class="photo-credit">📷 <a href="${img.pexelsUrl}" target="_blank" rel="nofollow noopener">${img.photographer}</a> via Pexels</div>`;
+    const visual = c.match(/<div class="article-visual">[\s\S]*?<\/svg><\/div>/);
+    if (visual) c = c.replace(visual[0], heroHTML);
+    else if (c.includes('<div class="article-hero">')) c = c.replace('<div class="article-hero">', `<div class="article-hero">\n  ${heroHTML}`);
+    else { console.log(`   ✗ no hero block in ${f}, skipped`); continue; }
+    const metas = `<meta property="og:image" content="${img.url}">\n<meta name="pexels-thumb" content="${img.thumb}">`;
+    const desc = c.match(/<meta name="description"[^>]*>/);
+    c = desc ? c.replace(desc[0], `${desc[0]}\n${metas}`) : c.replace(/<\/title>/, `</title>\n${metas}`);
+    if (!c.includes(".article-photo-hero{") || !c.includes(".photo-credit{")) c = c.replace("</style>", `${PHOTO_CSS}\n</style>`);
+    fs.writeFileSync(fp, c);
+    fixed++;
+    console.log(`   ✓ ${f} ← ${img.photographer}`);
+  }
+  console.log(`🖼️  Backfilled ${fixed} article images`);
+  return fixed;
 }
 
 async function generateArticle(topic, products = []) {
@@ -1225,6 +1289,23 @@ async function main() {
     if (changed) fs.writeFileSync(fp, c);
   }
 
+  collectUsedPhotoIds(articlesDir);
+
+  // Image-only run: `node publish.js --backfill-images` (no article, no Claude tokens)
+  if (process.argv.includes("--backfill-images")) {
+    const n = await backfillMissingImages(articlesDir);
+    if (!n) { console.log("Nothing to backfill."); return; }
+    const all = getArticleMetadata(articlesDir, getExistingSlugs(articlesDir));
+    fs.writeFileSync(path.join(SITE_DIR, "articles.html"), buildArticlesIndexHTML(all));
+    fs.writeFileSync(path.join(SITE_DIR, "index.html"), buildHomepageHTML(all));
+    console.log(`✅ Indexes rebuilt with thumbnails (${all.length} articles)`);
+    gitPush(`backfill hero images on ${n} articles`);
+    return;
+  }
+
+  // Every normal run also repairs a few image-less articles, so a missed photo self-heals.
+  await backfillMissingImages(articlesDir, 5);
+
   const existingSlugs = getExistingSlugs(articlesDir);
   // Buying guides first (highest purchase intent); fall back to the old topic flow.
   let topic = await generateBuyingGuideTopic(existingSlugs);
@@ -1253,7 +1334,7 @@ async function main() {
     if (pexelsImage) {
       console.log(`✅ Hero image: ${pexelsImage.photographer}${heroQuery ? ` (query: ${heroQuery})` : ""}`);
     } else {
-      console.log("⚠️  No Pexels image — using SVG visual");
+      console.log("::warning::No Pexels image found after all fallbacks — article published with SVG visual; next run will backfill it");
     }
     const midQuery = topic.guide ? null : (products[1] && products[1].img ? products[1].img : null);
     const midImage = topic.guide ? null : await fetchPexelsImage(topic.title, topic.category, midQuery);
