@@ -1,0 +1,43 @@
+name: BollywoodEdge Pinterest Pins
+# Posts up to 3 unpinned articles a day to the BollywoodEdge Pinterest board.
+# Uses no Anthropic tokens. Does nothing until PINTEREST_TOKEN and
+# PINTEREST_BOARD_ID are added under Settings → Secrets → Actions.
+
+on:
+  schedule:
+    - cron: '45 12 * * *'   # 6:15 PM IST daily
+  workflow_dispatch:
+
+concurrency:
+  group: publish   # same group as the publisher so the two never push at once
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  pin:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Pin new articles
+        env:
+          PINTEREST_TOKEN: ${{ secrets.PINTEREST_TOKEN }}
+          PINTEREST_BOARD_ID: ${{ secrets.PINTEREST_BOARD_ID }}
+        run: node pin.mjs
+      - name: Save pinned ledger
+        if: always()
+        run: |
+          [ -f pinned.json ] || exit 0
+          git config user.name "BollywoodEdge Pin Bot"
+          git config user.email "filmtabela@gmail.com"
+          git add pinned.json
+          git diff --cached --quiet && exit 0
+          git commit -m "Pinned: $(date +'%Y-%m-%d') [skip ci]"
+          git pull --rebase origin main
+          git push origin HEAD:main
