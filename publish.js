@@ -310,7 +310,7 @@ Return ONLY raw JSON (no markdown fences) with this shape:
   "items": [
     {
       "name": "specific product description a shopper would recognise, 3-8 words, no brand claims you cannot verify (e.g. 'Banarasi Art Silk Saree with Zari Border')",
-      "keywords": "4-7 lowercase words to search on Amazon India for exactly this item",
+      "keywords": "3-5 lowercase words to search on Amazon India: the item type plus one or two concrete details (fabric, colour, work), e.g. 'velvet lehenga choli maroon'. No mood or style words (aesthetic, glam, chic, minimal, gothic, eclectic, outfit, fashion, style)",
       "price": "realistic price range in rupees, e.g. ₹1,200–2,500",
       "best_for": "who or what occasion it suits, under 10 words",
       "why": "2-3 sentences on why it works and how to style or use it"
@@ -329,7 +329,7 @@ function renderBuyingGuide(guide) {
   lines.push(guide.intro);
   lines.push("## Our Top Picks");
   (guide.items || []).forEach((it, i) => {
-    const url = `${AMAZON_BASE}/s?k=${encodeURIComponent(it.keywords || it.name)}&tag=${ASSOCIATE_TAG}`;
+    const url = `${AMAZON_BASE}/s?k=${encodeURIComponent(require("./linkfix").cleanQuery(it.keywords || it.name))}&tag=${ASSOCIATE_TAG}`;
     lines.push(`<div class="pick-card"><span class="pick-num">${i + 1}</span><h3>${escapeHTML(it.name)}</h3><div class="pick-meta"><b>${escapeHTML(it.price || "")}</b> · Best for: ${escapeHTML(it.best_for || "")}</div><p>${escapeHTML(it.why || "")}</p><a href="${url}" class="shop-btn" target="_blank" rel="nofollow sponsored noopener">Check price on Amazon →</a></div>`);
   });
   if (guide.tips && guide.tips.length) {

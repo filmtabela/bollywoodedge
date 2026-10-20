@@ -175,7 +175,20 @@ async function indexNowPing(urls, waitMs = 60000) {
   } catch (e) { console.log("⚠️ IndexNow ping failed: " + e.message); }
 }
 
-module.exports = { fixHtml, fixAll, parsePrice, filterFor, writeSitemap, indexNowPending, indexNowPing };
+
+// Search-quality guard (added 20-Oct-2026 after a live audit of all 237 links on
+// amazon.in): long, over-specific queries returned 1-6 results or the wrong item
+// (a 6-word lehenga search showed petticoats), and mood words ("gothic glam",
+// "neutral minimal") showed gloves, shapewear, watches. cleanQuery() drops mood
+// words and keeps at most 5 words, so every new link lands on a full results page.
+const MOOD = /^(aesthetic|glam|glamorous|chic|minimal|minimalist|gothic|eclectic|outfit|outfits|fashion|style|stylish|trendy|vibe|look|inspired|bestseller|india|indian)$/i;
+function cleanQuery(q) {
+  const words = String(q || "").toLowerCase().replace(/[^a-z0-9\s-]/g, " ").split(/\s+/).filter(Boolean);
+  const kept = words.filter(w => !MOOD.test(w));
+  return (kept.length >= 2 ? kept : words).slice(0, 5).join(" ");
+}
+
+module.exports = { cleanQuery, fixHtml, fixAll, parsePrice, filterFor, writeSitemap, indexNowPending, indexNowPing };
 
 if (require.main === module) {
   const check = process.argv.includes("--check");
