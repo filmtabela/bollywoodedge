@@ -108,13 +108,22 @@ function addBeacon(html) {
   return html.replace(/<\/body>(?![\s\S]*<\/body>)/i, BEACON + "\n</body>");
 }
 
+// Site credit (added 20-Oct-2026): every site Imran runs says it was built by
+// Fortune Tech. Also corrects the old US Associate ID shown in older footers.
+const CREDIT = `<p style="margin-top:8px;font-size:12px;">Designed &amp; developed by <a href="https://ftech.co.in" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">Fortune Tech</a></p>`;
+function addCredit(html) {
+  html = html.replace(/Associate ID: <strong>bollywoodedge-20<\/strong>/g, "Associate ID: <strong>bollywooded0f-21</strong>");
+  if (html.includes("ftech.co.in") || !/<\/footer>/i.test(html)) return html;
+  return html.replace(/<\/footer>(?![\s\S]*<\/footer>)/i, CREDIT + "\n</footer>");
+}
+
 function fixAll(dir, { write = true } = {}) {
   const report = { files: 0, links: 0, changed: 0, badTag: 0, noFilter: [] };
   for (const fp of htmlFiles(dir)) {
     const src = fs.readFileSync(fp, "utf8");
     report.badTag += (src.match(/amazon\.in\/[^"'\s<>]*tag=(?!bollywooded0f-21)[\w-]+/g) || []).length;
     const r = fixHtml(src);
-    const withBeacon = addBeacon(r.html);
+    const withBeacon = addCredit(addBeacon(r.html));
     if (withBeacon !== r.html) { r.html = withBeacon; r.changed++; report.beacons = (report.beacons || 0) + 1; }
     report.links += r.total;
     if (r.changed) { report.files++; report.changed += r.changed; if (write) fs.writeFileSync(fp, r.html); }
