@@ -62,9 +62,18 @@ function affiliateLink(p) {
   return `${AMAZON_BASE}/s?k=${encodeURIComponent(p.keywords)}&tag=${ASSOCIATE_TAG}`;
 }
 
+// Catalog items written for women; never shown on a men's article (20-Oct-2026:
+// a women's perfume had landed on the men's fragrance guide).
+const WOMEN_ONLY = new Set(["hero-jeans", "tail-kurti", "tail-makeup-kit", "tail-handbag", "tail-perfume", "tail-leggings", "tail-silk-pillow"]);
+function isMensTopic(topic) {
+  const t = `${topic.title || ""} ${topic.category || ""} ${(topic.tags || []).join(" ")}`;
+  return /\bmen\b|\bmens\b|men's|\bgroom(ing)?\b|beard/i.test(t) && !/women/i.test(t);
+}
+
 function productsForTopic(topic) {
   const ids = topic.products || CATEGORY_PRODUCTS[topic.category] || [];
-  return ids.filter(id => PRODUCTS[id]).map(id => ({ id, ...PRODUCTS[id] }));
+  const mens = isMensTopic(topic);
+  return ids.filter(id => PRODUCTS[id] && !(mens && WOMEN_ONLY.has(id))).map(id => ({ id, ...PRODUCTS[id] }));
 }
 
 const TOPICS = [
@@ -1243,6 +1252,10 @@ function gitPush(slug) {
   try {
     execSync(`git config user.email "filmtabela@gmail.com"`, { stdio: "inherit" });
     execSync(`git config user.name "BollywoodEdge Bot"`, { stdio: "inherit" });
+    try { // correct Store ID + price filters on every Amazon link before committing
+      const r = require("./linkfix").fixAll(SITE_DIR);
+      console.log(`🔗 linkfix: ${r.changed} link(s) corrected of ${r.links}`);
+    } catch (e) { console.log("⚠️ linkfix skipped: " + e.message); }
     execSync(`git add .`, { stdio: "inherit" });
     execSync(`git commit -m "Auto-publish: ${slug}"`, { stdio: "inherit" });
     execSync(`git pull --rebase origin main`, { stdio: "inherit" });
