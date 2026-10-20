@@ -123,11 +123,36 @@ function fixAll(dir, { write = true } = {}) {
   return report;
 }
 
-module.exports = { fixHtml, fixAll, parsePrice, filterFor };
+// sitemap.xml + robots.txt (added 20-Oct-2026). Rebuilt on every run so new
+// articles reach Google and Bing (which feeds ChatGPT search) automatically.
+const SITE = "https://imraankhan.in";
+function writeSitemap(dir) {
+  const urls = htmlFiles(dir).map(fp => {
+    let rel = path.relative(dir, fp).replace(/\\/g, "/").replace(/\.html$/, "");
+    if (rel === "index") rel = "";
+    const html = fs.readFileSync(fp, "utf8");
+    const m = html.match(/data-published="([^"]+)"|"datePublished"\s*:\s*"([^"]+)"/);
+    const lastmod = m ? (m[1] || m[2]).slice(0, 10) : null;
+    return { loc: `${SITE}/${rel}`, lastmod, pri: rel === "" ? "1.0" : rel === "articles" ? "0.8" : rel.startsWith("articles/") ? "0.7" : "0.3" };
+  }).sort((a, b) => b.pri.localeCompare(a.pri) || a.loc.localeCompare(b.loc));
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
+    urls.map(u => `  <url><loc>${u.loc}</loc>${u.lastmod ? `<lastmod>${u.lastmod}</lastmod>` : ""}<priority>${u.pri}</priority></url>`).join("\n") +
+    `\n</urlset>\n`;
+  const sp = path.join(dir, "sitemap.xml");
+  const changed = !fs.existsSync(sp) || fs.readFileSync(sp, "utf8") !== xml;
+  if (changed) fs.writeFileSync(sp, xml);
+  const robots = `User-agent: *\nAllow: /\n\nSitemap: ${SITE}/sitemap.xml\n`;
+  const rp = path.join(dir, "robots.txt");
+  if (!fs.existsSync(rp) || fs.readFileSync(rp, "utf8") !== robots) fs.writeFileSync(rp, robots);
+  return { urls: urls.length, changed };
+}
+
+module.exports = { fixHtml, fixAll, parsePrice, filterFor, writeSitemap };
 
 if (require.main === module) {
   const check = process.argv.includes("--check");
   const r = fixAll(__dirname, { write: !check });
+  if (!check) { const sm = writeSitemap(__dirname); console.log(`sitemap.xml: ${sm.urls} pages${sm.changed ? " (updated)" : ""}`); }
   console.log(`${r.links} Amazon search links · ${r.changed} ${check ? "need fixing" : "fixed"} in ${r.files} files · wrong tag before: ${r.badTag}`);
   console.log(`${r.noFilter.length} links without a price filter (no price on the page to match):`);
   r.noFilter.slice(0, 40).forEach(l => console.log("  " + l));

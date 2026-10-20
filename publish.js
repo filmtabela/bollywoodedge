@@ -231,7 +231,33 @@ function escapeHTML(t) {
   return String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
+// Live cinema headlines (added 20-Oct-2026) so roughly every other guide can be a
+// "get the look" tie-in to a REAL current release, star wedding or event. The
+// model has no idea what is trending this week without this.
+async function fetchCinemaHeadlines() {
+  const queries = ["bollywood new release this week", "telugu tamil malayalam film release", "bollywood celebrity wedding", "bollywood actress look promotions", "film awards red carpet india"];
+  const titles = [];
+  for (const q of queries) {
+    try {
+      const res = await fetch(`https://news.google.com/rss/search?q=${encodeURIComponent(q + " when:7d")}&hl=en-IN&gl=IN&ceid=IN:en`, { signal: AbortSignal.timeout(10000) });
+      const xml = await res.text();
+      let n = 0;
+      for (const m of xml.matchAll(/<item>[\s\S]*?<title>([\s\S]*?)<\/title>/g)) {
+        titles.push(m[1].replace(/<!\[CDATA\[|\]\]>/g, "").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#39;/g, "'").trim());
+        if (++n >= 6) break;
+      }
+    } catch (e) { /* feed unavailable: fall back to evergreen topics */ }
+  }
+  return [...new Set(titles)].slice(0, 25);
+}
+
 async function generateBuyingGuideTopic(existingSlugs) {
+  const filmDay = Math.floor(Date.now() / 86400000) % 2 === 0;   // every other run
+  const headlines = filmDay ? await fetchCinemaHeadlines() : [];
+  const filmRule = headlines.length ? `
+- THIS RUN: tie the guide to ONE real, current Indian cinema moment taken ONLY from these live headlines (any industry: Hindi, Telugu, Tamil, Malayalam, Kannada, Punjabi): a film release, song, promotion tour, star wedding, award night or festive celebration. Make it a "get the look" shopping guide for women, e.g. "Best 7 Sarees Inspired by <Actress> Look in <Film> Under 6000". Use names exactly as they appear in a headline; never invent a film or event. Skip any headline about crime, accidents, illness, deaths, legal cases, controversy or politics. If no headline fits, write an evergreen premium guide instead.
+Live headlines:
+${headlines.map(h => "  • " + h).join("\n")}` : "";
   const today = new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
   const categories = Object.keys(CATEGORY_PRODUCTS);
   try {
@@ -244,7 +270,7 @@ Rules:
 - Format: "Best <number 5-10> <specific product type> <for occasion or person> Under <rupee amount>" or a close variant (e.g. "Best 7 Kanjivaram Silk Sarees for Diwali Under 8000", "Best 6 Luxury Perfumes for Her as Diwali Gifts Under 5000").
 - Premium price band: the budget in the title must be between 2000 and 10000 rupees. Pick product types where good options really exist on Amazon India at that price: silk and designer sarees, lehengas and wedding-guest outfits, fine and gold-plated jewellery, designer handbags, premium perfumes, premium skincare and makeup sets, beauty gift hampers, hair tools (dryers, stylers), pashmina shawls, watches for women.
 - Make it timely for the next 3-4 weeks in India: Karva Chauth, Diwali, Bhai Dooj, wedding season, festive gifting for her, early winter. Otherwise evergreen premium fashion, beauty or accessories for women.
-- Never men's products.
+- Never men's products.${filmRule}
 - Must be clearly different from every one of these existing slugs: ${existingSlugs.slice(0, 150).join(", ")}
 - "category" must be EXACTLY one of: ${categories.join(" | ")}
 - "title" uses plain words and numbers only, no punctuation, no rupee symbol.
@@ -290,7 +316,7 @@ Return ONLY raw JSON (no markdown fences) with this shape:
   "tips": ["4 short buying tips specific to this product type (fabric, sizing, quality checks, returns)"],
   "verdict": "2 sentences summing up the best overall pick and the best budget pick"
 }
-The number of items must match the number in the title. Every price must sit under the title's budget. Do not invent ratings, reviews or brand names.` }]
+The number of items must match the number in the title. Every price must sit under the title's budget. Do not invent ratings, reviews or brand names. If the title names a celebrity, film or event, describe each pick as inspired by that look: never claim the star wore, owns or endorses the product.` }]
   });
   return JSON.parse(message.content[0].text.replace(/```json|```/g, "").trim());
 }
@@ -1256,8 +1282,10 @@ function gitPush(slug) {
     execSync(`git config user.email "filmtabela@gmail.com"`, { stdio: "inherit" });
     execSync(`git config user.name "BollywoodEdge Bot"`, { stdio: "inherit" });
     try { // correct Store ID + price filters on every Amazon link before committing
-      const r = require("./linkfix").fixAll(SITE_DIR);
-      console.log(`🔗 linkfix: ${r.changed} link(s) corrected of ${r.links}`);
+      const lf = require("./linkfix");
+      const r = lf.fixAll(SITE_DIR);
+      const sm = lf.writeSitemap(SITE_DIR);
+      console.log(`🔗 linkfix: ${r.changed} fix(es) across ${r.links} links · sitemap ${sm.urls} pages`);
     } catch (e) { console.log("⚠️ linkfix skipped: " + e.message); }
     execSync(`git add .`, { stdio: "inherit" });
     execSync(`git commit -m "Auto-publish: ${slug}"`, { stdio: "inherit" });
