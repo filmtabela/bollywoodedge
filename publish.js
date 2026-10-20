@@ -252,7 +252,7 @@ async function fetchCinemaHeadlines() {
 }
 
 async function generateBuyingGuideTopic(existingSlugs) {
-  const filmDay = Math.floor(Date.now() / 86400000) % 2 === 0;   // every other run
+  const filmDay = existingSlugs.length % 2 === 1;   // alternates with each new article
   const headlines = filmDay ? await fetchCinemaHeadlines() : [];
   const filmRule = headlines.length ? `
 - THIS RUN: tie the guide to ONE real, current Indian cinema moment taken ONLY from these live headlines (any industry: Hindi, Telugu, Tamil, Malayalam, Kannada, Punjabi): a film release, song, promotion tour, star wedding, award night or festive celebration. Make it a "get the look" shopping guide for women, e.g. "Best 7 Sarees Inspired by <Actress> Look in <Film> Under 6000". Use names exactly as they appear in a headline; never invent a film or event. Skip any headline about crime, accidents, illness, deaths, legal cases, controversy or politics. If no headline fits, write an evergreen premium guide instead.
