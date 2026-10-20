@@ -147,7 +147,35 @@ function writeSitemap(dir) {
   return { urls: urls.length, changed };
 }
 
-module.exports = { fixHtml, fixAll, parsePrice, filterFor, writeSitemap };
+// IndexNow (added 20-Oct-2026): tells Bing and other IndexNow engines (Bing is
+// widely reported to feed ChatGPT search) about new pages the moment they go live.
+// No account needed: ownership is proven by the key file at the site root.
+const INDEXNOW_KEY = "295b7bac06341001b764190b74a38954";
+function indexNowPending(dir) {
+  const ledgerPath = path.join(dir, "indexnow.json");
+  let sent = [];
+  try { sent = JSON.parse(fs.readFileSync(ledgerPath, "utf8")); } catch (e) {}
+  const sm = fs.existsSync(path.join(dir, "sitemap.xml")) ? fs.readFileSync(path.join(dir, "sitemap.xml"), "utf8") : "";
+  const all = [...sm.matchAll(/<loc>([^<]+)<\/loc>/g)].map(m => m[1]);
+  const pending = all.filter(u => !sent.includes(u));
+  if (pending.length) fs.writeFileSync(ledgerPath, JSON.stringify(all, null, 1) + "\n");
+  return pending;
+}
+async function indexNowPing(urls, waitMs = 60000) {
+  if (!urls || !urls.length) return;
+  await new Promise(r => setTimeout(r, waitMs));   // let the host deploy first
+  try {
+    const res = await fetch("https://api.indexnow.org/indexnow", {
+      method: "POST",
+      headers: { "Content-Type": "application/json; charset=utf-8" },
+      body: JSON.stringify({ host: "imraankhan.in", key: INDEXNOW_KEY, keyLocation: `${SITE}/${INDEXNOW_KEY}.txt`, urlList: urls.slice(0, 10000) }),
+      signal: AbortSignal.timeout(20000),
+    });
+    console.log(`📡 IndexNow: ${urls.length} URL(s) → HTTP ${res.status}`);
+  } catch (e) { console.log("⚠️ IndexNow ping failed: " + e.message); }
+}
+
+module.exports = { fixHtml, fixAll, parsePrice, filterFor, writeSitemap, indexNowPending, indexNowPing };
 
 if (require.main === module) {
   const check = process.argv.includes("--check");

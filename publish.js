@@ -1281,6 +1281,7 @@ sections.forEach(s => observer.observe(s));
 
 function gitPush(slug) {
   console.log("\n📤 Pushing to GitHub...");
+  let pending = [];
   try {
     execSync(`git config user.email "filmtabela@gmail.com"`, { stdio: "inherit" });
     execSync(`git config user.name "BollywoodEdge Bot"`, { stdio: "inherit" });
@@ -1289,12 +1290,14 @@ function gitPush(slug) {
       const r = lf.fixAll(SITE_DIR);
       const sm = lf.writeSitemap(SITE_DIR);
       console.log(`🔗 linkfix: ${r.changed} fix(es) across ${r.links} links · sitemap ${sm.urls} pages`);
+      pending = lf.indexNowPending(SITE_DIR);
     } catch (e) { console.log("⚠️ linkfix skipped: " + e.message); }
     execSync(`git add .`, { stdio: "inherit" });
     execSync(`git commit -m "Auto-publish: ${slug}"`, { stdio: "inherit" });
     execSync(`git pull --rebase origin main`, { stdio: "inherit" });
     execSync(`git push origin main`, { stdio: "inherit" });
-    console.log("✅ Pushed to GitHub — Cloudflare will deploy in ~30 seconds");
+    console.log("✅ Pushed to GitHub — site deploys in ~30 seconds");
+    return pending;
   } catch (err) {
     console.error("❌ Git push failed:", err.message);
     throw err;
@@ -1363,7 +1366,7 @@ async function main() {
   }
   if (!topic) {
     console.log("⚠️  No new topic available — exiting without publishing (nothing was overwritten).");
-    gitPush("self-heal-only"); // still commit any self-heal/backfill changes
+    await require("./linkfix").indexNowPing(gitPush("self-heal-only")); // still commit any self-heal/backfill changes
     return;
   }
   console.log(`📌 Today's topic: ${topic.title}`);
@@ -1404,7 +1407,8 @@ async function main() {
     fs.writeFileSync(homepagePath, homepageHTML);
     console.log(`✅ Homepage updated with ${allArticles.length} articles`);
 
-    gitPush(slug);
+    const pending = gitPush(slug);
+    await require("./linkfix").indexNowPing(pending);
 
     console.log(`\n✅ Done!`);
     console.log(`📌 Article: ${topic.title}`);
