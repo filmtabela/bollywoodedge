@@ -94,7 +94,7 @@ function fixHtml(html) {
 }
 
 function htmlFiles(dir) {
-  const files = fs.readdirSync(dir).filter(f => f.endsWith(".html")).map(f => path.join(dir, f));
+  const files = fs.readdirSync(dir).filter(f => f.endsWith(".html") && !/^google[0-9a-f]+\.html$/.test(f)).map(f => path.join(dir, f));
   const art = path.join(dir, "articles");
   if (fs.existsSync(art)) files.push(...fs.readdirSync(art).filter(f => f.endsWith(".html")).map(f => path.join(art, f)));
   return files;
