@@ -197,6 +197,7 @@ async function generateNewTopic(existingSlugs) {
 Rules:
 - The topic must be meaningfully different from all of these existing article slugs: ${existingSlugs.join(", ")}
 - Prefer buyer-intent shopping angles (specific product categories people search to buy) over pure celebrity profiles
+- Audience is WOMEN only (focus decided 20-Oct-2026): premium women's fashion, beauty, jewellery and accessories, ideally in the 2000-10000 rupee range. Never men's topics.
 - "category" must be EXACTLY one of: ${categories.join(" | ")}
 - "products" must be 1-2 ids chosen from: ${productIds.join(", ")} that genuinely fit the topic
 - "amazonQuery" must be 3-5 lowercase words joined by +
@@ -237,11 +238,13 @@ async function generateBuyingGuideTopic(existingSlugs) {
     const message = await client.messages.create({
       model: "claude-sonnet-4-5",
       max_tokens: 400,
-      messages: [{ role: "user", content: `Today is ${today}. Invent ONE buying-guide article title for an Indian fashion and beauty shopping site (readers 20-40, shopping on Amazon India).
+      messages: [{ role: "user", content: `Today is ${today}. Invent ONE buying-guide article title for an Indian premium fashion and beauty shopping site for WOMEN (readers: women 25-45 with money to spend, shopping on Amazon India). Focus decided 20-Oct-2026: premium picks for women only, no men's topics.
 
 Rules:
-- Format: "Best <number 5-10> <specific product type> <for occasion or person> Under <rupee amount>" or a close variant (e.g. "Best 7 Silk Sarees for Diwali Under 3000", "Best 6 Men's Kurta Sets for Wedding Guests Under 2000").
-- Make it timely for the next 3-4 weeks in India: Diwali, Karva Chauth, Bhai Dooj, wedding season, festive gifting, early winter wear. Otherwise evergreen fashion, beauty, grooming or accessories.
+- Format: "Best <number 5-10> <specific product type> <for occasion or person> Under <rupee amount>" or a close variant (e.g. "Best 7 Kanjivaram Silk Sarees for Diwali Under 8000", "Best 6 Luxury Perfumes for Her as Diwali Gifts Under 5000").
+- Premium price band: the budget in the title must be between 2000 and 10000 rupees. Pick product types where good options really exist on Amazon India at that price: silk and designer sarees, lehengas and wedding-guest outfits, fine and gold-plated jewellery, designer handbags, premium perfumes, premium skincare and makeup sets, beauty gift hampers, hair tools (dryers, stylers), pashmina shawls, watches for women.
+- Make it timely for the next 3-4 weeks in India: Karva Chauth, Diwali, Bhai Dooj, wedding season, festive gifting for her, early winter. Otherwise evergreen premium fashion, beauty or accessories for women.
+- Never men's products.
 - Must be clearly different from every one of these existing slugs: ${existingSlugs.slice(0, 150).join(", ")}
 - "category" must be EXACTLY one of: ${categories.join(" | ")}
 - "title" uses plain words and numbers only, no punctuation, no rupee symbol.
