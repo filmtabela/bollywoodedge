@@ -253,6 +253,9 @@ async function fetchCinemaHeadlines() {
 
 async function generateBuyingGuideTopic(existingSlugs) {
   const filmDay = existingSlugs.length % 2 === 1;   // alternates with each new article
+  // 1 in 4 articles (20-Oct-2026): she shops for the whole family.
+  const familyRule = existingSlugs.length % 4 === 2 ? `
+- THIS RUN ONLY (overrides the women-only and never-men's rules above): a gifting guide written for HER as the buyer, shopping for someone in her family: husband, father, brother (Bhai Dooj), parents or kids. E.g. "Best 7 Diwali Gifts for Your Husband Under 4000", "Best 6 Bhai Dooj Gifts for Your Brother Under 3000", "Best 8 Kids Festive Outfits Under 2000". Same 2000-10000 budget band (kids may go down to 1500).` : "";
   const headlines = filmDay ? await fetchCinemaHeadlines() : [];
   const filmRule = headlines.length ? `
 - THIS RUN: tie the guide to ONE real, current Indian cinema moment taken ONLY from these live headlines (any industry: Hindi, Telugu, Tamil, Malayalam, Kannada, Punjabi): a film release, song, promotion tour, star wedding, award night or festive celebration. Make it a "get the look" shopping guide for women, e.g. "Best 7 Sarees Inspired by <Actress> Look in <Film> Under 6000". Use names exactly as they appear in a headline; never invent a film or event. Skip any headline about crime, accidents, illness, deaths, legal cases, controversy or politics. If no headline fits, write an evergreen premium guide instead.
@@ -270,7 +273,7 @@ Rules:
 - Format: "Best <number 5-10> <specific product type> <for occasion or person> Under <rupee amount>" or a close variant (e.g. "Best 7 Kanjivaram Silk Sarees for Diwali Under 8000", "Best 6 Luxury Perfumes for Her as Diwali Gifts Under 5000").
 - Premium price band: the budget in the title must be between 2000 and 10000 rupees. Pick product types where good options really exist on Amazon India at that price: silk and designer sarees, lehengas and wedding-guest outfits, fine and gold-plated jewellery, designer handbags, premium perfumes, premium skincare and makeup sets, beauty gift hampers, hair tools (dryers, stylers), pashmina shawls, watches for women.
 - Make it timely for the next 3-4 weeks in India: Karva Chauth, Diwali, Bhai Dooj, wedding season, festive gifting for her, early winter. Otherwise evergreen premium fashion, beauty or accessories for women.
-- Never men's products.${filmRule}
+- Never men's products.${filmRule}${familyRule}
 - Must be clearly different from every one of these existing slugs: ${existingSlugs.slice(0, 150).join(", ")}
 - "category" must be EXACTLY one of: ${categories.join(" | ")}
 - "title" uses plain words and numbers only, no punctuation, no rupee symbol.
