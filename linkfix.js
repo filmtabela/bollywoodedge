@@ -100,12 +100,22 @@ function htmlFiles(dir) {
   return files;
 }
 
+// Cloudflare Web Analytics (free visitor counts; added 20-Oct-2026). Ensured on
+// every page, so new articles from any template get it automatically.
+const BEACON = `<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "ec5f74b874a14742abd8512d72289e70"}'></script><!-- End Cloudflare Web Analytics -->`;
+function addBeacon(html) {
+  if (html.includes("cloudflareinsights.com/beacon") || !/<\/body>/i.test(html)) return html;
+  return html.replace(/<\/body>(?![\s\S]*<\/body>)/i, BEACON + "\n</body>");
+}
+
 function fixAll(dir, { write = true } = {}) {
   const report = { files: 0, links: 0, changed: 0, badTag: 0, noFilter: [] };
   for (const fp of htmlFiles(dir)) {
     const src = fs.readFileSync(fp, "utf8");
     report.badTag += (src.match(/amazon\.in\/[^"'\s<>]*tag=(?!bollywooded0f-21)[\w-]+/g) || []).length;
     const r = fixHtml(src);
+    const withBeacon = addBeacon(r.html);
+    if (withBeacon !== r.html) { r.html = withBeacon; r.changed++; report.beacons = (report.beacons || 0) + 1; }
     report.links += r.total;
     if (r.changed) { report.files++; report.changed += r.changed; if (write) fs.writeFileSync(fp, r.html); }
     for (const u of (write ? r.html : src).match(LINK_RE) || []) if (!/rh=p_36/.test(u)) report.noFilter.push(`${path.relative(dir, fp)}: ${u.slice(0, 90)}`);
