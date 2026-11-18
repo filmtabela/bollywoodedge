@@ -16,7 +16,7 @@ import { exec } from 'child_process';
 const APP_ID = process.env.PINTEREST_APP_ID || '1623749';
 const PORT = 8085;
 const REDIRECT = `http://localhost:${PORT}/callback`;
-const SCOPES = 'boards:read,pins:read,pins:write,user_accounts:read';
+const SCOPES = 'boards:read,boards:write,pins:read,pins:write,user_accounts:read';
 const SITE = 'https://imraankhan.in';
 const STORE = path.join(os.homedir(), '.bollywoodedge-pinterest.json');
 
