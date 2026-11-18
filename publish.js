@@ -15,6 +15,16 @@ const SITE_DIR = process.cwd();
 const ASSOCIATE_TAG = "bollywooded0f-21"; // Amazon.in
 const ASSOCIATE_TAG_US = "bollywoodedge-20"; // Amazon.com (reference only)
 const AMAZON_BASE = "https://www.amazon.in";
+// US EDITION (added 2026-11-18): Hollywood "get the look" buying guides for US
+// shoppers, linked to Amazon.com with the US tag. Runs on Wed and Fri (IST);
+// Monday stays India. Force with US_FORCE=1 (or MARKET=india to force India).
+const AMAZON_BASE_US = "https://www.amazon.com";
+function isUSRun() {
+  if (process.env.MARKET === "india") return false;
+  if (process.env.US_FORCE === "1" || process.env.MARKET === "us") return true;
+  const istDay = new Date(Date.now() + 5.5 * 3600 * 1000).getUTCDay(); // 0=Sun
+  return istDay === 3 || istDay === 5;
+}
 // ============================================================
 
 const client = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
@@ -251,6 +261,64 @@ async function fetchCinemaHeadlines() {
   return [...new Set(titles)].slice(0, 25);
 }
 
+// US edition topic: Hollywood / international celebrity "get the look" guide for US shoppers
+async function fetchUSHeadlines() {
+  const queries = ["celebrity red carpet look this week", "Hollywood actress style premiere", "Hollywood actor style new movie", "celebrity wedding fashion", "awards show red carpet fashion", "celebrity street style"];
+  const titles = [];
+  for (const q of queries) {
+    try {
+      const res = await fetch(`https://news.google.com/rss/search?q=${encodeURIComponent(q + " when:7d")}&hl=en-US&gl=US&ceid=US:en`, { signal: AbortSignal.timeout(10000) });
+      const xml = await res.text();
+      let n = 0;
+      for (const m of xml.matchAll(/<item>[\s\S]*?<title>([\s\S]*?)<\/title>/g)) {
+        titles.push(m[1].replace(/<!\[CDATA\[|\]\]>/g, "").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#39;/g, "'").trim());
+        if (++n >= 6) break;
+      }
+    } catch (e) { /* feed unavailable: fall back to evergreen topics */ }
+  }
+  return [...new Set(titles)].slice(0, 30);
+}
+
+async function generateUSGuideTopic(existingSlugs) {
+  const headlines = await fetchUSHeadlines();
+  const today = new Date().toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" });
+  const hl = headlines.length ? `
+- Tie the guide to ONE real, current celebrity fashion moment taken ONLY from these live headlines (a film premiere, red carpet, award night, wedding, street-style moment or a new release): a "get the look" guide. Use names exactly as they appear in a headline; never invent an event. Skip any headline about crime, accidents, illness, deaths, legal cases, controversy or politics. If no headline fits, write an evergreen celebrity-inspired guide instead.
+Live headlines:
+${headlines.map(h => "  • " + h).join("\n")}` : "";
+  try {
+    const message = await client.messages.create({
+      model: "claude-sonnet-4-5",
+      max_tokens: 400,
+      messages: [{ role: "user", content: `Today is ${today}. Invent ONE buying-guide article title for a Hollywood and international celebrity style shopping site for US shoppers (mostly women 25-45, also gift buyers) shopping on Amazon.com.
+
+Rules:
+- Format: "Best <number 5-9> <specific product type> Inspired by <Celebrity> <Look or Event> Under <number> Dollars" or a close variant, e.g. "Best 7 Leather Jackets Inspired by Robert Pattinson Under 150 Dollars", "Best 7 Pearl Necklaces Inspired by Zendaya Red Carpet Look Under 100 Dollars".
+- The budget in the title must be between 30 and 200 dollars. Pick product types with good options on Amazon.com at that price: jackets and coats, dresses, handbags, jewellery, sunglasses, watches, boots, perfume, skincare and makeup sets, gift sets.
+- Timely for the next 3-4 weeks in the US: holiday gifting, party season, winter outfits, awards season. Otherwise evergreen.${hl}
+- Must be clearly different from every one of these existing slugs: ${existingSlugs.slice(0, 150).join(", ")}
+- "title" uses plain words and numbers only, no punctuation, no dollar symbol.
+- "pexelsQuery": 3-5 English words for a stock photo that matches the products (never a celebrity name).
+- "amazonQuery": 3-5 lowercase words joined by + for the overall product type.
+
+Respond with ONLY raw JSON with keys: title, tags (array of 3 short strings), emoji, pexelsQuery, amazonQuery.` }]
+    });
+    const t = JSON.parse(message.content[0].text.replace(/```json|```/g, "").trim());
+    if (!t || !t.title || existingSlugs.includes(slugify(t.title))) return null;
+    t.category = "Hollywood Glam";
+    if (!Array.isArray(t.tags)) t.tags = ["Hollywood Style"];
+    t.emoji = t.emoji || "🎬";
+    t.amazonQuery = t.amazonQuery || "celebrity+style+women";
+    t.products = [];
+    t.guide = true;
+    t.market = "us";
+    return t;
+  } catch (e) {
+    console.log("⚠️  US guide topic generation failed:", e.message);
+    return null;
+  }
+}
+
 async function generateBuyingGuideTopic(existingSlugs) {
   const filmDay = existingSlugs.length % 2 === 1;   // alternates with each new article
   // 1 in 4 articles (20-Oct-2026): she shops for the whole family.
@@ -302,7 +370,7 @@ async function generateBuyingGuide(topic) {
   const message = await client.messages.create({
     model: "claude-sonnet-4-5",
     max_tokens: 3500,
-    messages: [{ role: "user", content: `Write a shopping buying guide for Indian readers titled "${topic.title}".
+    messages: [{ role: "user", content: `Write a shopping buying guide for ${topic.market === "us" ? "US" : "Indian"} readers titled "${topic.title}".
 
 Return ONLY raw JSON (no markdown fences) with this shape:
 {
@@ -310,8 +378,8 @@ Return ONLY raw JSON (no markdown fences) with this shape:
   "items": [
     {
       "name": "specific product description a shopper would recognise, 3-8 words, no brand claims you cannot verify (e.g. 'Banarasi Art Silk Saree with Zari Border')",
-      "keywords": "3-5 lowercase words to search on Amazon India: the item type plus one or two concrete details (fabric, colour, work), e.g. 'velvet lehenga choli maroon'. No mood or style words (aesthetic, glam, chic, minimal, gothic, eclectic, outfit, fashion, style)",
-      "price": "realistic price range in rupees, e.g. ₹1,200–2,500",
+      "keywords": "3-5 lowercase words to search on Amazon ${topic.market === "us" ? ".com" : "India"}: the item type plus one or two concrete details (fabric, colour, work), e.g. 'velvet lehenga choli maroon'. No mood or style words (aesthetic, glam, chic, minimal, gothic, eclectic, outfit, fashion, style)",
+      "price": "${topic.market === "us" ? "realistic price range in US dollars, e.g. $35–$80" : "realistic price range in rupees, e.g. ₹1,200–2,500"}",
       "best_for": "who or what occasion it suits, under 10 words",
       "why": "2-3 sentences on why it works and how to style or use it"
     }
@@ -324,12 +392,14 @@ The number of items must match the number in the title. Every price must sit und
   return JSON.parse(message.content[0].text.replace(/```json|```/g, "").trim());
 }
 
-function renderBuyingGuide(guide) {
+function renderBuyingGuide(guide, market) {
+  const BASE = market === "us" ? AMAZON_BASE_US : AMAZON_BASE;
+  const TAG = market === "us" ? ASSOCIATE_TAG_US : ASSOCIATE_TAG;
   const lines = [];
   lines.push(guide.intro);
   lines.push("## Our Top Picks");
   (guide.items || []).forEach((it, i) => {
-    const url = `${AMAZON_BASE}/s?k=${encodeURIComponent(require("./linkfix").cleanQuery(it.keywords || it.name))}&tag=${ASSOCIATE_TAG}`;
+    const url = `${BASE}/s?k=${encodeURIComponent(require("./linkfix").cleanQuery(it.keywords || it.name))}&tag=${TAG}`;
     lines.push(`<div class="pick-card"><span class="pick-num">${i + 1}</span><h3>${escapeHTML(it.name)}</h3><div class="pick-meta"><b>${escapeHTML(it.price || "")}</b> · Best for: ${escapeHTML(it.best_for || "")}</div><p>${escapeHTML(it.why || "")}</p><a href="${url}" class="shop-btn" target="_blank" rel="nofollow sponsored noopener">Check price on Amazon →</a></div>`);
   });
   if (guide.tips && guide.tips.length) {
@@ -672,6 +742,9 @@ function buildShopTheLookHTML(products) {
 }
 
 function buildArticleHTML(topic, articleText, pexelsImage = null, products = [], midImage = null) {
+  const US = topic.market === "us";
+  const BASE = US ? AMAZON_BASE_US : AMAZON_BASE;
+  const TAG = US ? ASSOCIATE_TAG_US : ASSOCIATE_TAG;
   const today = new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
   const visual = getCategoryVisual(topic.category);
   const heroImageHTML = pexelsImage
@@ -702,9 +775,9 @@ function buildArticleHTML(topic, articleText, pexelsImage = null, products = [],
 <head>
 <meta charset="UTF-8">
 <meta name="published-ts" content="${Date.now()}">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+${US ? '<meta name="market" content="us">\n' : ''}<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${topic.title} - BollywoodEdge</title>
-<meta name="description" content="${topic.title} - shop every piece on Amazon. Bollywood style decoded.">
+<meta name="description" content="${topic.title} - shop every piece on Amazon. ${US ? "Hollywood" : "Bollywood"} style decoded.">
 ${pexelsImage ? `<meta property="og:image" content="${pexelsImage.url}">
 <meta name="pexels-thumb" content="${pexelsImage.thumb}">` : ''}
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -795,14 +868,14 @@ footer strong{color:#fff;}
   <div class="shop-box">
     <h3>${topic.emoji} Shop ${topic.title.split(" ").slice(0,3).join(" ")} Picks on Amazon</h3>
     <p>Find the best products handpicked to match this look — available on Amazon with fast delivery.</p>
-    <a href="${AMAZON_BASE}/s?k=${topic.amazonQuery}&tag=${ASSOCIATE_TAG}" class="shop-btn" target="_blank" rel="nofollow sponsored noopener">Shop on Amazon</a>
+    <a href="${BASE}/s?k=${topic.amazonQuery}&tag=${TAG}" class="shop-btn" target="_blank" rel="nofollow sponsored noopener">Shop on Amazon</a>
   </div>
 </div>
 <footer>
   <p style="font-size:18px;font-family:'Playfair Display',serif;color:#fff;margin-bottom:8px;">BollywoodEdge</p>
   <p>Celebrity Style. Real Products. Every Day.</p>
   <p style="margin-top:12px;"><a href="/">Home</a> &middot; <a href="/articles.html">All Style Guides</a></p>
-  <p style="margin-top:16px;font-size:12px;">As an Amazon Associate, BollywoodEdge earns from qualifying purchases.<br>Associate ID: <strong>${ASSOCIATE_TAG}</strong></p>
+  <p style="margin-top:16px;font-size:12px;">As an Amazon Associate, BollywoodEdge earns from qualifying purchases.<br>Associate ID: <strong>${TAG}</strong></p>
   <p style="margin-top:12px;font-size:12px;">Copyright ${new Date().getFullYear()} BollywoodEdge</p>
 </footer>
 </body>
@@ -1171,7 +1244,7 @@ footer strong{color:#fff;}
 
   <div class="view-all-banner">
     <h3>✨ ${articles.length} Style Guides & Growing</h3>
-    <p>New celebrity style guide published every day — all with Amazon picks inside.</p>
+    <p>New celebrity style guides every week — Bollywood and Hollywood looks, all with Amazon picks inside.</p>
     <a href="/articles.html" class="view-all-btn">View All Style Guides →</a>
   </div>
 </div>
@@ -1315,7 +1388,8 @@ async function main() {
     const fp = path.join(articlesDir, f);
     let c = fs.readFileSync(fp, "utf8");
     let changed = false;
-    const fixed = c
+    const isUSFile = c.includes('<meta name="market" content="us">');
+    const fixed = isUSFile ? c : c
       .split("https://www.amazon.com/s?").join("https://www.amazon.in/s?")
       .split("tag=bollywoodedge-20").join("tag=bollywooded0f-21");
     if (fixed !== c) { c = fixed; changed = true; console.log(`🔧 Fixed old links in ${f}`); }
@@ -1358,7 +1432,8 @@ async function main() {
 
   const existingSlugs = getExistingSlugs(articlesDir);
   // Buying guides first (highest purchase intent); fall back to the old topic flow.
-  let topic = await generateBuyingGuideTopic(existingSlugs);
+  let topic = isUSRun() ? await generateUSGuideTopic(existingSlugs) : null;
+  if (!topic) topic = await generateBuyingGuideTopic(existingSlugs);
   if (!topic) topic = getTodaysTopic(existingSlugs);
   if (!topic) {
     console.log("📚 All listed topics are published — asking Claude for a fresh topic...");
@@ -1375,7 +1450,7 @@ async function main() {
     const products = productsForTopic(topic);
     if (products.length) console.log(`🛍  Products: ${products.map(p => p.id).join(", ")}`);
     const articleText = topic.guide
-      ? renderBuyingGuide(await generateBuyingGuide(topic))
+      ? renderBuyingGuide(await generateBuyingGuide(topic), topic.market)
       : await generateArticle(topic, products);
     const slug = slugify(topic.title);
     console.log("🖼️  Fetching Pexels images...");
@@ -1413,7 +1488,7 @@ async function main() {
     console.log(`\n✅ Done!`);
     console.log(`📌 Article: ${topic.title}`);
     console.log(`🔗 URL: https://imraankhan.in/articles/${slug}.html`);
-    console.log(`🛍  Tag: ${ASSOCIATE_TAG}`);
+    console.log(`🛍  Tag: ${topic.market === "us" ? ASSOCIATE_TAG_US : ASSOCIATE_TAG}`);
 
   } catch (error) {
     console.error("❌ Error:", error.message);
