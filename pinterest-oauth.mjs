@@ -79,10 +79,19 @@ console.log(`      Tokens stored locally at ${STORE} (permissions 600). Never pr
 // 3. Live API actions
 const me = await (await api('/user_account', tok.access_token)).json();
 console.log(`[4/4] Live API call — connected account: @${me.username}`);
-const boards = (await (await api('/boards?page_size=100', tok.access_token)).json()).items || [];
-console.log('      Boards:', boards.map(b => b.name).join(' | '));
-const board = boards.find(b => /bollywood style on amazon/i.test(b.name)) || boards[0];
-if (!board) { console.log('No board found — create one on Pinterest first.'); process.exit(1); }
+// Trial access: Pinterest requires writes to go through its API Sandbox (api-sandbox.pinterest.com).
+const SB = 'https://api-sandbox.pinterest.com/v5';
+const sb = (p, opts = {}) => fetch(`${SB}${p}`, { ...opts, headers: { Authorization: `Bearer ${tok.access_token}`, 'Content-Type': 'application/json' } });
+const prodBoards = (await (await api('/boards?page_size=100', tok.access_token)).json()).items || [];
+console.log('      Boards on account:', prodBoards.map(b => b.name).join(' | '));
+console.log('      Trial access: creating the demo Pin through the Pinterest API Sandbox.');
+let board = ((await (await sb('/boards?page_size=100')).json()).items || [])[0];
+if (!board) {
+  const cb = await sb('/boards', { method: 'POST', body: JSON.stringify({ name: 'BollywoodEdge Demo Board', description: 'BollywoodEdge buying guides', privacy: 'PUBLIC' }) });
+  board = await cb.json();
+  if (!cb.ok) { console.log('      ❌ Sandbox board failed:', JSON.stringify(board).slice(0, 200)); process.exit(1); }
+  console.log(`      Created sandbox board "${board.name}"`);
+}
 
 // newest US guide from our live site feed (sitemap)
 const sm = await (await fetch(`${SITE}/sitemap.xml`)).text();
@@ -91,7 +100,7 @@ const slug = urls.reverse().find(u => /under-\d+-dollars/.test(u)) || urls[0];
 const page = await (await fetch(slug.endsWith('.html') ? slug : slug + '.html')).text();
 const img = (page.match(/<meta property="og:image" content="([^"]+)"/) || [])[1];
 const title = ((page.match(/<title>([^<]+)<\/title>/) || [])[1] || 'BollywoodEdge guide').replace(/\s*-\s*BollywoodEdge\s*$/, '');
-const pin = await api('/pins', tok.access_token, { method: 'POST', body: JSON.stringify({
+const pin = await sb('/pins', { method: 'POST', body: JSON.stringify({
   board_id: board.id, title: title.slice(0, 100), alt_text: title,
   description: `${title} #CelebrityStyle #AmazonFinds`.slice(0, 500),
   link: slug.endsWith('.html') ? slug : slug + '.html', media_source: { source_type: 'image_url', url: img },
