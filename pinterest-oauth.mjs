@@ -18,6 +18,8 @@ const PORT = 8085;
 const REDIRECT = `http://localhost:${PORT}/callback`;
 const SCOPES = 'boards:read,boards:write,pins:read,pins:write,user_accounts:read';
 const SITE = 'https://imraankhan.in';
+// Trial access runs in Pinterest's API Sandbox: sandbox OAuth token + sandbox API host.
+const HOST = 'https://api-sandbox.pinterest.com';
 const STORE = path.join(os.homedir(), '.bollywoodedge-pinterest.json');
 
 function askHidden(q) {
@@ -33,7 +35,7 @@ const SECRET = process.env.PINTEREST_APP_SECRET || await askHidden('Paste the ap
 const basic = 'Basic ' + Buffer.from(`${APP_ID}:${SECRET}`).toString('base64');
 
 async function tokenCall(params) {
-  const r = await fetch('https://api.pinterest.com/v5/oauth/token', {
+  const r = await fetch(`${HOST}/v5/oauth/token`, {
     method: 'POST',
     headers: { Authorization: basic, 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams(params),
@@ -42,7 +44,7 @@ async function tokenCall(params) {
   if (!r.ok) throw new Error(`Token call failed: HTTP ${r.status} ${JSON.stringify(j).slice(0, 200)}`);
   return j;
 }
-const api = (p, tok, opts = {}) => fetch(`https://api.pinterest.com/v5${p}`, {
+const api = (p, tok, opts = {}) => fetch(`${HOST}/v5${p}`, {
   ...opts, headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
 });
 
@@ -78,19 +80,16 @@ console.log(`      Tokens stored locally at ${STORE} (permissions 600). Never pr
 
 // 3. Live API actions
 const me = await (await api('/user_account', tok.access_token)).json();
-console.log(`[4/4] Live API call — connected account: @${me.username}`);
-// Trial access: Pinterest requires writes to go through its API Sandbox (api-sandbox.pinterest.com).
-const SB = 'https://api-sandbox.pinterest.com/v5';
-const sb = (p, opts = {}) => fetch(`${SB}${p}`, { ...opts, headers: { Authorization: `Bearer ${tok.access_token}`, 'Content-Type': 'application/json' } });
-const prodBoards = (await (await api('/boards?page_size=100', tok.access_token)).json()).items || [];
-console.log('      Boards on account:', prodBoards.map(b => b.name).join(' | '));
-console.log('      Trial access: creating the demo Pin through the Pinterest API Sandbox.');
-let board = ((await (await sb('/boards?page_size=100')).json()).items || [])[0];
+console.log(`[4/4] Live API call (Pinterest API Sandbox) — account: @${me.username || JSON.stringify(me).slice(0,80)}`);
+const sb = (p, opts = {}) => api(p, tok.access_token, opts);
+const existing = (await (await sb('/boards?page_size=100')).json()).items || [];
+console.log('      Boards (sandbox):', existing.map(b => b.name).join(' | ') || '(none yet)');
+let board = existing[0];
 if (!board) {
   const cb = await sb('/boards', { method: 'POST', body: JSON.stringify({ name: 'BollywoodEdge Demo Board', description: 'BollywoodEdge buying guides', privacy: 'PUBLIC' }) });
   board = await cb.json();
-  if (!cb.ok) { console.log('      ❌ Sandbox board failed:', JSON.stringify(board).slice(0, 200)); process.exit(1); }
-  console.log(`      Created sandbox board "${board.name}"`);
+  if (!cb.ok) { console.log('      ❌ Board failed:', JSON.stringify(board).slice(0, 200)); process.exit(1); }
+  console.log(`      Created board "${board.name}"`);
 }
 
 // newest US guide from our live site feed (sitemap)
