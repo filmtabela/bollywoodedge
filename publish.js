@@ -87,6 +87,8 @@ function productsForTopic(topic) {
 }
 
 const TOPICS = [
+  // Added 2026-11-20 (GTA VI launch week test, US market). Kept in TOPICS so the index label, emoji and photo search work.
+  { title: "Best 7 Console Gaming Accessories for GTA VI Launch Week Under 120 Dollars", category: "Gaming", tags: ["Gaming", "GTA VI", "Console Accessories"], emoji: "🎮", amazonQuery: "console+gaming+accessories", pexelsQuery: "video game controller headset" },
   { title: "Katrina Kaif Skincare Routine", category: "Skincare", tags: ["Katrina Kaif", "Skincare", "Glow"], emoji: "✨", amazonQuery: "vitamin+c+serum+skincare" },
   { title: "Ranveer Singh Street Style Guide", category: "Men's Style", tags: ["Ranveer Singh", "Street Style", "Men"], emoji: "👑", amazonQuery: "men+streetwear+jacket" },
   { title: "Priyanka Chopra Jewellery Picks", category: "Accessories", tags: ["Priyanka Chopra", "Jewellery", "Accessories"], emoji: "💍", amazonQuery: "statement+jewellery+women" },
